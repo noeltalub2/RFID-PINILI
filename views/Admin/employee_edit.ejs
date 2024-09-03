@@ -1,0 +1,339 @@
+<% layout('./Layout/layout.ejs') -%>
+    <div class="content ">
+
+        <div class="row">
+            <div class="col-lg-12">
+                <form id="employeeEditForm" class="profile-validation" method="post" enctype="multipart/form-data">
+                    <div class="block block-rounded block-themed">
+                        <div class="block-header bg-success">
+                            <h3 class="block-title">
+                                Personal Details
+                            </h3>
+                            <div class="block-options">
+                                <button type="submit" class="btn btn-sm btn-outline-light">
+                                    <i class="far fa-floppy-disk"></i>
+                                    Update
+                                </button>
+                            </div>
+
+                        </div>
+                        <div class="block-content fs-sm">
+
+                            <input type="hidden" name="uuid" value="<%= profile.uuid %>">
+
+                            <p class="fs-sm text-muted">Your account’s vital info. Your username will be
+                                publicly
+                                visible.</p>
+
+                            <!-- Name Fields -->
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="firstname" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstname" name="firstname"
+                                        placeholder="John" value="<%= profile.firstname %>" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="middlename" class="form-label">Middle Name</label>
+                                    <input type="text" class="form-control" id="middlename" name="middlename"
+                                        placeholder="Smith" value="<%= profile.middlename %>" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="lastname" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastname" name="lastname"
+                                        placeholder="Doe" value="<%= profile.lastname %>" required>
+                                </div>
+                            </div>
+
+
+
+                            <div class="row">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea rows="4" name="address" class="form-control" id="address"
+                                        required><%= profile.address %></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="gender" class="form-label">Gender</label>
+                                    <select class="form-control" id="gender" name="gender" required>
+                                        <option value="" hidden>Choose...</option>
+                                        <option value="male" <%=profile.gender==='male' ? 'selected' : '' %>
+                                            >Male
+                                        </option>
+                                        <option value="female" <%=profile.gender==='female' ? 'selected' : '' %>
+                                            >Female
+                                        </option>
+                                    </select>
+
+
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="phonenumber" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phonenumber" placeholder="09123456789"
+                                        name="phonenumber" value="<%= profile.phonenumber %>" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email"
+                                        placeholder="john.doe@example.com" name="email" value="<%= profile.email %>"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3"> <label for="birthday" class="form-label">Birthday</label>
+                                    <input type="date" class="form-control" id="birthday" name="birthday"
+                                        value="<%= profile.birthday %>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Your Avatar</label>
+                                    <div class="d-flex align-items-center mb-4">
+                                        <img src="/images/profile/<%=profile.profile_url%>" alt="Profile Photo"
+                                            class="img-avatar me-3">
+                                        <input class="form-control" type="file" id="profile" name="profile">
+                                    </div>
+                                </div>
+
+
+
+                            </div>
+
+
+
+
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+            <div class="col-lg-6">
+                <form id="employmentForm" action="/admin/employee/employment" method="POST"
+                    class="employment-validation">
+                    <div class="block block-rounded  block-themed">
+                        <div class="block-header bg-modern">
+                            <h3 class="block-title">Employment Details</h3>
+                            <div class="block-options">
+                                <button type="submit" class="btn btn-sm btn-outline-light">
+                                    <i class="far fa-floppy-disk"></i>
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div class="block-content fs-sm">
+
+                            <input type="hidden" name="uuid" value="<%= profile.uuid %>">
+
+                            <p class="fs-sm text-muted">
+                                Regularly updating your employment details keeps your records secure.
+                            </p>
+
+                            <div class="mb-4">
+                                <label class="form-label" for="department">Department</label>
+                                <select id="departmentSelect" class="form-control" required name="department">
+                                    <option value="" hidden>Choose One...</option>
+                                    <% departments.forEach(function(department) { %>
+                                        <option value="<%= department.dp_id %>"
+                                            <%=department.dp_id===userCurrentDepartment ? 'selected' : '' %>
+                                            >
+                                            <%= department.department %>
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label" for="designation">Designation</label>
+                                <select id="designationSelect" class="form-control" name="designation" required>
+                                    <option value="" hidden>Choose One...</option>
+                                    <% if (userCurrentDepartment) { %>
+                                        <% const selectedDepartment=departments.find(dept=> dept.dp_id ===
+                                            userCurrentDepartment); %>
+                                            <% if (selectedDepartment) { %>
+                                                <% selectedDepartment.designations.forEach(function(designation) { %>
+                                                    <option value="<%= designation.id %>"
+                                                        <%=userCurrentDesignations.includes(designation.id) ? 'selected'
+                                                        : '' %>>
+                                                        <%= designation.designation %>
+                                                    </option>
+                                                    <% }); %>
+                                                        <% } %>
+                                                            <% } %>
+                                </select>
+                            </div>
+
+
+
+                            <div class="mb-4">
+                                <div class="col-12">
+                                    <label class="form-label" for="joined_date">Joined Date</label>
+                                    <input type="date" class="form-control" id="joined_date" name="joined_date"
+                                        value="<%=userJoinedDate ? new Date(userJoinedDate).toISOString().split('T')[0] : ''%>"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="col-12">
+                                    <label class="form-label" for="exit_date">Exit Date</label>
+                                    <input type="date" class="form-control" id="exit_date" name="exit_date"
+                                        value="<%= userExitDate ? new Date(userExitDate).toISOString().split('T')[0] : '' %>"
+                                        >
+
+                                </div>
+                            </div>
+
+
+
+
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <form action="/admin/employee/login" method="POST" class="login-validation">
+                            <div class="block block-rounded  block-themed">
+                                <div class="block-header bg-warning">
+                                    <h3 class="block-title">Account Login</h3>
+                                    <div class="block-options">
+                                        <button type="submit" class="btn btn-sm btn-outline-light">
+                                            <i class="far fa-floppy-disk"></i>
+                                            Update
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="block-content">
+
+                                    <div class="row push">
+                                        <input type="hidden" name="uuid" id="" value="<%= profile.uuid %>">
+
+                                        <p class="fs-sm text-muted">
+                                            Change user login details to keep account secure.
+                                        </p>
+
+                                        <div class=" mb-3">
+                                            <label for="username" class="form-label">Username</label>
+                                            <input type="text" class="form-control " id="username" name="username"
+                                                placeholder="User" value="<%= profile.username %>" required>
+                                        </div>
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <label class="form-label" for="password">Password</label>
+                                                <input type="password" class="form-control " id="password"
+                                                    name="password" required>
+                                            </div>
+                                        </div>
+
+
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-12">
+                        <form action="/admin/employee/rfid" method="POST" class="rfid-validation">
+                            <div class="block block-rounded  block-themed">
+                                <div class="block-header bg-primary-darker">
+                                    <h3 class="block-title">RFID Card</h3>
+                                    <div class="block-options">
+                                        <button type="submit" class="btn btn-sm btn-outline-light">
+                                            <i class="far fa-floppy-disk"></i>
+                                            Update
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="block-content">
+
+                                    <div class="row push">
+                                        <input type="hidden" name="uuid" id="uuid" value="<%= profile.uuid %>">
+
+                                        <p class="fs-sm text-muted">
+                                            Update the RFID card details to ensure accurate record-keeping.
+                                        </p>
+
+
+                                        <div class=" mb-3">
+                                            <label for="rfid" class="form-label">RFID Card</label>
+                                            <input type="text" class="form-control" id="rfid" name="rfid"
+                                                value="<%=rfid?.cardnumber%>" placeholder="0000000000" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="">
+                                                <label for="rfidStatus" class="form-label">RFID Status</label>
+                                            </div>
+
+
+                                            <input  type="checkbox"  data-size="sm" data-toggle="toggle"
+                                                data-onlabel="Active" data-offlabel="Inactive" data-onstyle="success"
+                                                data-offstyle="danger" name="status"   <% if (rfid?.is_active === 1) { %> checked <% } %>>
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- Department and Designation -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const departments = <%- JSON.stringify(departments) %>;
+                const departmentSelect = document.getElementById('departmentSelect');
+                const designationSelect = document.getElementById('designationSelect');
+
+                departmentSelect.addEventListener('change', function () {
+                    const departmentId = this.value;
+                    designationSelect.innerHTML = '<option value="" hidden>Choose One...</option>';
+
+                    if (departmentId) {
+                        const selectedDepartment = departments.find(dept => dept.dp_id == departmentId);
+
+                        if (selectedDepartment) {
+                            selectedDepartment.designations.forEach(function (designation) {
+                                const option = document.createElement('option');
+                                option.value = designation.id; // Use designation ID for value
+                                option.textContent = designation.designation;
+                                designationSelect.appendChild(option);
+                            });
+
+                            // Set the selected values if available
+                            const currentDesignations = <%- JSON.stringify(userCurrentDesignations) %>; // Array of designation IDs
+                            currentDesignations.forEach(function (id) {
+                                const option = designationSelect.querySelector(`option[value="${id}"]`);
+                                if (option) {
+                                    option.selected = true;
+                                }
+                            });
+                        }
+                    }
+                });
+
+                // Trigger the change event on load to populate the initial designation options
+                if (departmentSelect.value) {
+                    departmentSelect.dispatchEvent(new Event('change'));
+                }
+
+
+
+            
+            });
+        </script>
+        <!-- Update Profile Details -->

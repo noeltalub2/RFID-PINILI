@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%-include ('../Partials/title-meta.ejs')%>
+    <%-include ('../Partials/head-css.ejs')%>
+</head>
+
+<body>
+
+    <div id="page-container"
+        class="sidebar-o sidebar-dark enable-page-overlay side-scroll page-header-fixed main-content-narrow">
+        <div id="page-loader" class="show"></div>
+        <%-include ('../Partials/sidebar.ejs')%>
+        <%-include ('../Partials/header.ejs')%>
+        <!-- Main Container -->
+        <main id="main-container">
+            
+            <%-include ('../Partials/hero.ejs')%>
+            <!-- Page Content -->
+
+           
+            <%- body -%>
+           
+            <!-- END Page Content -->
+        </main>
+        <!-- END Main Container -->
+
+        <%-include ('../Partials/footer.ejs')%>
+        
+        <%-include ('../Partials/vendor-script.ejs')%>
+        <%= block('end-script').toString() %>
+    </div>
+    <!-- END Page Container -->
+
+
+</body>
+
+</html>

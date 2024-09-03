@@ -1,0 +1,188 @@
+<% layout('./Layout/layout.ejs') -%>
+    <div class="content content-boxed">
+
+        <div class="block block-rounded">
+            <div class="block-header block-header-default">
+                <h3 class="block-title">
+                    Register <small>Create a new account</small>
+                </h3>
+            </div>
+            <div class="block-content fs-sm">
+                <form action="/admin/employee" method="post" enctype="multipart/form-data" class="profile2-validation">
+
+                    <div class="row push">
+
+
+                        <div class="col-lg-12">
+                            <p class="fs-sm text-muted">
+                                Please fill in the form below to create your personal details.
+                            </p>
+                            <!-- Name Field -->
+                            <div class="row">
+                                <div class="mb-3 col-md-4">
+                                    <label for="firstname" class="form-label">First Name</label>
+                                    <input type="text" class="form-control " id="firstname" name="firstname"
+                                        placeholder="John" required>
+                                </div>
+                                <div class="mb-3 col-md-4">
+                                    <label for="middlename" class="form-label">Middle Name</label>
+                                    <input type="text" class="form-control " id="middlename" name="middlename"
+                                        placeholder="Exa" required>
+                                </div>
+                                <div class="mb-3 col-md-4">
+
+
+                                    <label for="lastname" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control " id="lastname" name="lastname"
+                                        placeholder="Doe" required>
+                                </div>
+                            </div>
+                                <div class="row">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea rows="4" class="form-control " id="address" placeholder="123 Main St"
+                                        name="address" required></textarea>
+                                </div>
+                            </div>
+
+                            
+                        
+                            <div class="row">
+                                <div class="mb-3 col-md-4">
+                                    <label for="gender" class="form-label">Gender</label>
+                                    <select class="form-select form-select-alt" id="gender" name="gender" required>
+                                        <option value="" hidden>Choose...</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3 col-md-4">
+                                    <label for="phonenumber" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control " id="phonenumber" placeholder="09123456789"
+                                        name="phonenumber" required>
+                                </div>
+                                <div class="mb-3 col-md-4">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control " id="email" name="email"
+                                        placeholder="john.doe@example.com" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="mb-3 col-md-6">
+                                    <label for="birthday" class="form-label">Birthday</label>
+                                    <input type="date" class="form-control " id="birthday" name="birthday" required>
+                                </div>
+                                <div class="mb-3 col-md-6">
+                                    <label class="form-label" for="profile">Upload Profile Photo</label>
+                                    <input class="form-control " type="file" id="profile" name="profile">
+                                </div>
+                            </div>
+
+
+                            
+                        </div>
+                        <div class="col-lg-6">
+                            <p class="fs-sm text-muted">
+                                Please fill in the form below for employment details.
+                            </p>
+                            <div class="mb-3">
+                                <label class="form-label" for="department">Department</label>
+                                <select id="departmentSelect" class="form-control" required name="department">
+                                    <option value="" hidden>Choose One...</option>
+                                    <% departments.forEach(function(department) { %>
+                                        <option value="<%= department.dp_id %>">
+                                            <%= department.department %>
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="designation">Designation</label>
+                                <select id="designationSelect" class="form-control" name="designation" required>
+                                    <option value="" hidden>Choose One...</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="col-12">
+                                    <label class="form-label" for="joined_date">Joined Date</label>
+                                    <input type="date" class="form-control" id="joined_date" name="joined_date"
+                                        required>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="col-lg-6">
+                            <p class="fs-sm text-muted">
+                                Please fill in the form below for RFID card.
+                            </p>
+                            <div class="row">
+                                <div class="mb-3">
+                                    <label for="rfid" class="form-label">RFID Card</label>
+                                    <input type="text" class="form-control" id="rfid" name="rfid"
+                                        placeholder="0000000000" required>
+                                </div>
+
+                            </div>
+                            <p class="fs-sm text-muted">
+                                Please fill in the form below for account login details.
+                            </p>
+                            <div class="row">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control " id="username" name="username"
+                                        placeholder="User" required>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="mb-3 col-md-12">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control " id="password" name="password"
+                                        placeholder="********" required>
+                                </div>
+                                <div class="mb-3 col-md-12">
+                                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control " id="confirm_password"
+                                        name="confirm_password" placeholder="********" required>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="mb-4">
+                                <button type="submit" class="btn btn-alt-primary">Create Account</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        document.getElementById('departmentSelect').addEventListener('change', function () {
+            const departments = <%- JSON.stringify(departments) %>;
+            const departmentId = this.value;
+            const designationSelect = document.getElementById('designationSelect');
+
+            // Clear previous options
+            designationSelect.innerHTML = '<option value="" hidden>Choose One...</option>';
+
+            if (departmentId) {
+                const selectedDepartment = departments.find(dept => dept.dp_id == departmentId);
+
+                if (selectedDepartment) {
+                    selectedDepartment.designations.forEach(function (designation) {
+                        const option = document.createElement('option');
+                        option.value = designation.id; // Set value to designation ID
+                        option.textContent = designation.designation; // Set the text to the designation name
+                        designationSelect.appendChild(option);
+                    });
+                }
+            }
+        });
+    </script>

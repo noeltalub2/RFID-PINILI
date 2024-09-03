@@ -1,0 +1,210 @@
+<% layout('./Layout/layout.ejs') -%>
+
+<div class="content">
+    <h2 class="content-heading">Mark Attendance </h2>
+    <!-- Attendance Form with "Mark All" Button -->
+    <% if (holidays.length > 0) {%>
+      
+        <h5 class="mt-0 mb-2">HOLIDAY: <%=holidays[0].description%></h5>
+    <%}%>
+    <form id="employeeAttendance" method="get">
+        <div class="row g-2">
+            <div class="col-lg-4">
+                <input type="text" id="search" class="form-control" placeholder="Search by name...">
+            </div>
+            <div class="col-lg-4">
+                <input type="date" name="date" id="" required class="form-control" value="<%= currentDate %>">
+            </div>
+
+            <div class="col-lg-2">
+                <button type="submit" class="btn btn-primary me-1 mb-3 w-100">
+                    <i class="fa fa-fw fa-search me-1"></i> Search
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <div class="flex-shrink-0">
+                <i class="fa fa-fw fa-info-circle"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <p class="mb-0"><span class="fw-semibold">Note: </span>Employees with a warning icon on their profile have no attendance record in the database. Please mark their attendance to create a record of absence.</p>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <form id="attendanceForm" action="/admin/mark-attendance" method="POST">
+        <% 
+        // Function to convert 12-hour time to 24-hour time
+        function convertTo24Hour(time12h) {
+            if (!time12h) return ''; // Return empty if no time is provided
+            const [time, modifier] = time12h.split(' ');
+            let [hours, minutes] = time.split(':');
+            
+            if (modifier === 'PM' && hours !== '12') {
+                hours = parseInt(hours, 10) + 12;
+            }
+            
+            if (modifier === 'AM' && hours === '12') {
+                hours = 0;
+            }
+            
+            return `${String(hours).padStart(2, '0')}:${minutes}`;
+        }
+        %>
+
+        <input type="hidden" name="date" value="<%= currentDate %>">
+
+     
+        <div class="row" id="employeeList">
+            <% employees.forEach(employee => { %>
+                <div class="col-md-6 col-xl-3 employee-item" data-name="<%= employee.firstname.toLowerCase() %> <%= employee.lastname.toLowerCase() %>">
+                    <div class="block block-rounded block-link-shadow text-center">
+                        <div class="block-content block-content-full <% if (employee?.status_timein === null) { %> ribbon ribbon-danger <% } %> ">
+                            <% if (employee?.status_timein === null) {%>
+                                <div class="ribbon-box">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                            <%}%>
+                            <img class="img-avatar" src="/images/profile/<%= employee.profile_url %>" alt="Profile Image">
+                        </div>
+                        <div class="block-content block-content-full block-content-sm bg-body-light">
+                            <p class="fw-semibold mb-0"><%= employee.firstname %> <%= employee.lastname %></p>
+                        </div>
+                        <div class="block-content block-content-full">
+                            <div id="attendance_details_<%= employee.uuid %>">
+                                <!-- Hidden input for UUID -->
+                                <input type="hidden" name="attendance[<%= employee.uuid %>][uuid]" value="<%= employee.uuid %>">
+                                <input type="hidden" name="attendance[<%= employee.uuid %>][rfidcard]" value="<%= employee.cardnumber %>">
+                                <div class="form-group mb-2">
+                                    <label for="timein_<%= employee.uuid %>" class="small">Time In:</label>
+                                    <input type="time" id="timein_<%= employee.uuid %>" class="form-control form-control-sm" 
+                                        name="attendance[<%= employee.uuid %>][timein]" value="<%= convertTo24Hour(employee.time_in) %>" <% if (employee?.time_in === null) { %> readonly <% } %>>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="timeout_<%= employee.uuid %>" class="small">Time Out: (Optional)</label>
+                                    <input type="time" id="timeout_<%= employee.uuid %>" class="form-control form-control-sm" 
+                                        name="attendance[<%= employee.uuid %>][timeout]" value="<%= convertTo24Hour(employee.time_out) %>" <% if (employee?.time_in === null) { %> readonly <% } %>>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <input onchange="toggleAttendance('<%= employee.uuid %>')" type="checkbox" id="status_<%= employee.uuid %>" data-size="sm" data-toggle="toggle"
+                                    data-onlabel="Present" data-offlabel="Absent" data-onstyle="success" data-offstyle="danger"
+                                    name="attendance[<%= employee.uuid %>][status]" 
+                                    <% if (employee?.time_in !== null) { %> checked <% } %>>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <button type="submit" class="btn btn-success mb-4"> <i class="fa fa-fw fa-check me-1"></i>Mark Attendance</button>
+    </form>
+</div>
+
+<script>
+    function toggleAttendance(uuid) {
+        const statusCheckbox = document.getElementById(`status_${uuid}`);
+        const timeInInput = document.getElementById(`timein_${uuid}`);
+        const timeOutInput = document.getElementById(`timeout_${uuid}`);
+
+        if (statusCheckbox.checked) {
+            timeInInput.removeAttribute('readonly');
+            timeOutInput.removeAttribute('readonly');
+            timeInInput.setAttribute('required', 'required');
+        } else {
+            timeInInput.removeAttribute('required');
+            timeInInput.setAttribute('readonly', 'readonly');
+            timeOutInput.setAttribute('readonly', 'readonly');
+        }
+    }
+
+    document.getElementById('search').addEventListener('input', function(event) {
+    const query = event.target.value.toLowerCase();
+    const employees = document.querySelectorAll('.employee-item');
+
+    employees.forEach(employee => {
+        const name = employee.getAttribute('data-name');
+        const inputs = employee.querySelectorAll('input');
+        
+        if (name.includes(query)) {
+            employee.style.display = '';  // Show the matched employee
+            inputs.forEach(input => {
+                input.removeAttribute('disabled');  // Enable inputs for matched employee
+            });
+        } else {
+            employee.style.display = 'none';  // Hide other employees
+            inputs.forEach(input => {
+                input.setAttribute('disabled', 'disabled');  // Disable inputs for other employees
+            });
+        }
+    });
+});
+
+
+    document.getElementById('attendanceForm').addEventListener('submit', async function(event) {
+        One.layout('header_loader_on');
+        event.preventDefault(); // Prevent the default form submission
+
+        // Create a FormData object from the form
+        const formData = new FormData(this);
+
+        // Convert FormData to a plain object
+        const data = {};
+        formData.forEach((value, key) => {
+            if (!data[key]) {
+                data[key] = value;
+            } else if (Array.isArray(data[key])) {
+                data[key].push(value);
+            } else {
+                data[key] = [data[key], value];
+            }
+        });
+
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(data).toString(),
+            });
+
+            if (response.ok) {
+                One.helpers('jq-notify', {
+                    type: 'success',
+                    icon: 'fa fa-check me-1',
+                    message: 'Attendance marked successfully!'
+                });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                throw new Error('Network response was not ok.');
+                One.helpers('jq-notify', {
+                    type: 'danger',
+                    icon: 'fa fa-times-circle me-1',
+                    message: 'Failed to mark attendance. Please try again.'
+                });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            One.helpers('jq-notify', {
+                type: 'danger',
+                icon: 'fa fa-times-circle me-1',
+                message: 'An error occurred. Please try again.'
+            });
+            console.error('Error:', error);
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } finally {
+            One.layout('header_loader_off');
+        }
+    }); 
+</script>

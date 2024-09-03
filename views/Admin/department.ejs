@@ -1,0 +1,298 @@
+<% layout('./Layout/layout.ejs') -%>
+
+    <div class="content">
+
+        <!-- Dynamic Table with Export Buttons -->
+        <div class="block block-rounded">
+            <div class="block-header block-header-default">
+                <h3 class="block-title">Departments List<small></small></h3>
+                <button type="button" data-bs-toggle="modal" data-bs-target="#modal-block-normal"
+                    class="btn btn-alt-success btn-sm">
+                    <i class="fa fa-fw fa-plus me-1"></i>New Department
+                </button>
+            </div>
+            <div class="block-content block-content-full overflow-x-auto">
+                <div class="table-responsive">
+                    <!-- DataTables init on table by adding .js-dataTable-buttons class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
+                    <table class="table table-bordered table-striped table-vcenter js-dataTable-full">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#</th>
+
+                                <th>Department Name</th>
+
+                                <th>
+                                    Contact Number
+                                </th>
+                                <th>
+                                    Room Location
+                                </th>
+
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% departments.forEach((department, index)=> { %>
+                                <tr>
+                                    <td class="text-center fs-sm">
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td class="fs-sm">
+                                        <%= department.department %>
+                                    </td>
+
+                                    <td class="fs-sm">
+                                        <%= department.contact_number %>
+                                    </td>
+                                    <td class="fs-sm">
+                                        <%= department.room_location %>
+                                    </td>
+                                    <td class="text-center fs-sm">
+                                        <div class="btn-group">
+                                            <button type="button"
+                                                class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+                                                data-bs-toggle="tooltip" aria-label="Edit Department"
+                                                data-bs-original-title="Edit Department"
+                                                onclick="editDepartment('<%= department.dp_id %>')">
+                                                <i class="fa fa-fw fa-pencil-alt"></i>
+                                            </button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+                                                data-bs-toggle="tooltip" aria-label="Remove Department"
+                                                onclick="deleteDepartment('<%= department.dp_id %>','<%= department.department %>')"
+                                                data-bs-original-title="Remove Department">
+                                                <i class="fa fa-fw fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+
+                                </tr>
+                                <% }) %>
+
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+        </div>
+        <!-- END Dynamic Table with Export Buttons -->
+
+
+    </div>
+
+    <!-- Normal Block Modal -->
+    <div class="modal" id="modal-block-normal" tabindex="-1" role="dialog" aria-labelledby="modal-block-normal"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="addDepartmentForm" action="/admin/department/" method="POST" class="department-validation">
+                    <div class="block block-rounded block-transparent mb-0">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">Add Department</h3>
+                            <div class="block-options">
+                                <button type="button" class="btn-block-option" data-bs-dismiss="modal"
+                                    aria-label="Close">
+                                    <i class="fa fa-fw fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="block-content fs-sm">
+                            <div class="mb-2">
+                                <label class="form-label" for="department-input">Department</label>
+                                <input type="text" class="form-control " id="department-input" name="department"
+                                    required style="text-transform: uppercase;">
+
+                            </div>
+                            <div class="mb-4">
+                                <div class="row g-3">
+                                    <div class="col-lg-6"> <label class="form-label" for="contact-input">Contact
+                                            Number</label>
+                                        <input type="text" class="form-control " id="contact-input"
+                                            name="contact_number" required>
+                                    </div>
+                                    <div class="col-lg-6"> <label class="form-label" for="roomnumber-input">Room
+                                            Number</label>
+                                        <input type="text" class="form-control " id="roomnumber-input"
+                                            name="room_location" required>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                        <div class="block-content block-content-full text-end bg-body">
+                            <button type="button" class="btn btn-sm btn-alt-secondary me-1"
+                                data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit Department Modal -->
+    <div class="modal" id="modal-edit-department" tabindex="-1" role="dialog" aria-labelledby="modal-edit-department"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="editDepartmentForm" action="/admin/department/edit/" method="POST"
+                    class="edit-department-validation">
+                    <input type="hidden" name="department_id" id="edit-department-id">
+                    <div class="block block-rounded block-transparent mb-0">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">Edit Department</h3>
+                            <div class="block-options">
+                                <button type="button" class="btn-block-option" data-bs-dismiss="modal"
+                                    aria-label="Close">
+                                    <i class="fa fa-fw fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="block-content fs-sm">
+                            <div class="mb-2">
+                                <label class="form-label" for="edit-department-input">Department</label>
+                                <input type="text" class="form-control " id="edit-department-input" name="department"
+                                    required style="text-transform: uppercase;">
+                            </div>
+                            <div class="mb-3">
+                                <div class="row g-3">
+                                    <div class="col-lg-6">
+                                        <label class="form-label" for="edit-contact-input">Contact Number</label>
+                                        <input type="text" class="form-control " id="edit-contact-input"
+                                            name="contact_number" required>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <label class="form-label" for="edit-roomnumber-input">Room Number</label>
+                                        <input type="text" class="form-control " id="edit-roomnumber-input"
+                                            name="room_location" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                <div class="flex-shrink-0">
+                                    <i class="fa fa-fw fa-info-circle"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <p class="mb-0 small">
+                                        <span class="fw-semibold">Note: </span>Department will update all the <span
+                                            class="fw-semibold">Employees</span> associated with it
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="block-content block-content-full text-end bg-body">
+                            <button type="button" class="btn btn-sm btn-alt-secondary me-1"
+                                data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Department Modal -->
+    <div class="modal" id="modal-delete-department" tabindex="-1" role="dialog"
+        aria-labelledby="modal-delete-department" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="deleteDepartmentForm" action="/admin/department/delete/" method="POST"
+                    class="delete-department-validation">
+                    <input type="hidden" name="department_id" id="delete-department-id">
+                    <div class="block block-rounded block-transparent mb-0">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">Delete Department</h3>
+                            <div class="block-options">
+                                <button type="button" class="btn-block-option" data-bs-dismiss="modal"
+                                    aria-label="Close">
+                                    <i class="fa fa-fw fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="block-content fs-sm">
+                            <div class="mb-3">Are you sure you want to delete the <span id="department_delete_name"
+                                    class="fw-semibold"></span> department?</div>
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <div class="flex-shrink-0">
+                                    <i class="fa fa-fw fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <p class="mb-0 small">
+                                        <span class="fw-semibold">Note: </span>Deleting the department will also delete
+                                        all the
+                                        <span class="fw-semibold">Employees</span> and <span
+                                            class="fw-semibold">Designations</span> associated with it.
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="block-content block-content-full text-end bg-body">
+                            <button type="button" class="btn btn-sm btn-alt-secondary me-1"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        function deleteDepartment(departmentId, departmentName) {
+            document.getElementById("department_delete_name").innerText = departmentName;
+            document.getElementById("delete-department-id").value = departmentId;
+
+            // Show the modal using Bootstrap 5 API
+            const modal = new bootstrap.Modal(document.getElementById('modal-delete-department'));
+            modal.show();
+        }
+
+
+        document.getElementById('deleteDepartmentForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+
+            const departmentId = document.getElementById('delete-department-id').value;
+
+            try {
+                const response = await fetch('/admin/department/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ department_id: departmentId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modal-delete-department'));
+                    modal.hide();
+
+                    // Show a success notification
+                    One.helpers('jq-notify', { type: 'success', icon: 'fa fa-check-circle me-1', message: 'Department deleted successfully!' });
+                        // Delay the redirection to allow the notification to be seen
+                        setTimeout(() => {
+                        window.location.href = "/admin/department"; // Redirect to the department page
+                    }, 2500); // Adjust delay as needed (2500ms = 2.5 seconds)
+                    // Optionally, refresh the page or update the department list
+                    // location.reload(); // Refresh the page to reflect changes
+                } else {
+                    // Show an error notification
+                    One.helpers('jq-notify', { type: 'danger', icon: 'fa fa-times-circle me-1', message: result.message || 'Failed to delete department.' });
+                }
+            } catch (error) {
+                console.error('Failed to delete department:', error);
+                One.helpers('jq-notify', { type: 'danger', icon: 'fa fa-times-circle me-1', message: 'An error occurred while deleting the department.' });
+            }
+        });
+
+    </script>

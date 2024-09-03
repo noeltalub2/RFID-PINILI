@@ -1,0 +1,84 @@
+<!--
+        OneUI JS
+
+        Core libraries and functionality
+        webpack is putting everything together at /assets/_js/main/app.js
+    -->
+<script src="/assets/js/oneui.app.min.js"></script>
+
+
+<!-- jQuery (required for DataTables plugin) -->
+<script src="/assets/js/lib/jquery.min.js"></script>
+
+<!-- Page JS Plugins -->
+<script src="/assets/js/plugins/datatables/dataTables.min.js"></script>
+<script src="/assets/js/plugins/datatables-bs5/js/dataTables.bootstrap5.min.js"></script>
+<script src="/assets/js/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="/assets/js/plugins/datatables-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
+<script src="/assets/js/plugins/datatables-buttons/dataTables.buttons.min.js"></script>
+<script src="/assets/js/plugins/datatables-buttons-bs5/js/buttons.bootstrap5.min.js"></script>
+<script src="/assets/js/plugins/datatables-buttons-jszip/jszip.min.js"></script>
+<script src="/assets/js/plugins/datatables-buttons-pdfmake/pdfmake.min.js"></script>
+<script src="/assets/js/plugins/datatables-buttons-pdfmake/vfs_fonts.js"></script>
+<script src="/assets/js/plugins/datatables-buttons/buttons.print.min.js"></script>
+<script src="/assets/js/plugins/datatables-buttons/buttons.html5.min.js"></script>
+
+<!-- Page JS Code -->
+<script src="/assets/js/pages/be_tables_datatables.min.js"></script>
+
+
+<!-- Page JS Plugins -->
+<script src="/assets/js/plugins/fullcalendar/index.global.min.js"></script>
+
+<!-- Page JS Code -->
+<script src="/assets/js/pages/be_comp_calendar.min.js"></script>
+
+<script src="/assets/js/plugins/select2/js/select2.full.min.js"></script>
+<!-- Page JS Plugins -->
+<script src="/assets/js/plugins/jquery-validation/jquery.validate.min.js"></script>
+
+<script src="/assets/js/plugins/flatpickr/flatpickr.min.js"></script>
+<script src="/assets/js/plugins/bootstrap-toggle/bootstrap5-toggle.ecmas.min.js"></script>
+
+<script src="/assets/js/pages/holiday_validation.js"></script>
+
+<script src="/assets/js/pages/profile2_validation.js"></script>
+<script src="/assets/js/pages/profile_validation.js"></script>
+<script src="/assets/js/pages/profile3_validation.js"></script>
+<script src="/assets/js/pages/password_validation.js"></script>
+<script src="/assets/js/pages/department_validation.js"></script>
+<script src="/assets/js/pages/edit_department_validation.js"></script>
+<script src="/assets/js/pages/designation_validation.js"></script>
+<script src="/assets/js/pages/edit_designation_validation.js"></script>
+<script src="/assets/js/pages/employment_validation.js"></script>
+<script src="/assets/js/pages/login_validation.js"></script>
+<script src="/assets/js/pages/rfid_validation.js"></script>
+<script src="/assets/js/pages/edit_holiday.js"></script>
+
+
+<script src="/assets/js/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="/assets/js/plugins/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/assets/js/plugins/slick-carousel/slick.min.js"></script>
+<!-- END Dynamic Table with Export Buttons -->
+<script src="/assets/js/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+
+<script>One.helpersOnLoad(['jq-notify', 'jq-select2', 'js-flatpickr', 'jq-slick', 'jq-datepicker']);</script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const updateTime = () => {
+            const now = new Date();
+            document.getElementById("date-widget").innerHTML = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById("time-widget").innerHTML = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+        };
+        updateTime();
+        setInterval(updateTime, 1000);
+
+
+
+    });
+
+</script>

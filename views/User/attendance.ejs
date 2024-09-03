@@ -1,0 +1,57 @@
+<% layout('./Layout/layout.ejs') -%>
+
+<div class="content">
+
+<!-- Dynamic Table with Export Buttons -->
+<div class="block block-rounded">
+    <div class="block-header block-header-default">
+        <h3 class="block-title">Attendance Table <small>All Time</small></h3>
+    </div>
+    <div class="block-content block-content-full overflow-x-auto">
+        <div class="table-responsive">
+            <!-- DataTables init on table by adding .js-dataTable-buttons class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
+            <table class="table table-bordered table-striped table-vcenter js-dataTable-buttons">
+                <thead>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th>Date</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Total Hours</th>
+                   
+                    </tr>
+                </thead>
+                <tbody>
+                   
+                        <% attendance.forEach((record, index) => { %>
+                            <tr>
+                                <td class="text-center fs-sm"><%= index + 1 %></td>
+                                <td class="fw-semibold fs-sm">
+                                    <%= new Date(record.log_date).toLocaleDateString("en-US", {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    }) %>
+                                </td>
+                                <td class="fs-sm"><%= record.time_in %></td>
+                                <td class="fs-sm"><%= record.time_out || 'N/A' %></td>
+                                <td class="">
+                                    <span class="text-muted fs-sm">
+                                        <%= record.total_hours || 'N/A' %>
+                                    </span>
+                                </td>
+                               
+                            </tr>
+                        <% }) %>
+                  
+                </tbody>
+            </table>
+            
+        </div>
+
+    </div>
+</div>
+<!-- END Dynamic Table with Export Buttons -->
+
+    
+</div>

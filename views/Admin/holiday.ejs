@@ -1,0 +1,302 @@
+<% layout('./Layout/layout.ejs') -%>
+    <div class="content">
+
+        <!-- Dynamic Table with Export Buttons -->
+        <div class="block block-rounded">
+            <div class="block-header block-header-default">
+                <h3 class="block-title">Holiday List<small></small></h3>
+                <button type="button" data-bs-toggle="modal" data-bs-target="#modal-block-normal"
+                    class="btn btn-alt-success btn-sm">
+                    <i class="fa fa-fw fa-plus me-1"></i>Add Holiday
+                </button>
+            </div>
+            <div class="block-content block-content-full overflow-x-auto">
+                <div class="table-responsive">
+                    <!-- DataTables init on table by adding .js-dataTable-buttons class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
+                    <table class="table table-bordered table-striped table-vcenter js-dataTable-full">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th>Holiday Date</th>
+                                <th>Holiday Description</th>
+                  
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% holidays.forEach((holiday, index)=> {
+                                const date = new Date(holiday.holiday_date);
+                                const options = { month: 'long', day: 'numeric' };
+                                const formattedDate = date.toLocaleDateString('en-US', options);
+                                %>
+                                <tr>
+                                    <td class="text-center">
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= formattedDate %>
+                                    </td>
+                                    <td>
+                                        <%= holiday.description %>
+                                    </td>
+                              
+
+                                    <td class="text-center fs-sm">
+                                        <div class="btn-group">
+                                            <button type="button"
+                                                class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+                                                data-bs-toggle="tooltip" aria-label="Edit Holiday"
+                                                data-bs-original-title="Edit Holiday" onclick="editHoliday('<%= holiday.id %>')">
+                                                <i class="fa fa-fw fa-pencil-alt"></i>
+                                            </button>
+                                            <button type="button" onclick="deleteHoliday('<%= holiday.id %>','<%= holiday.description %>')"
+                                                class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+                                                data-bs-toggle="tooltip" aria-label="Remove Holiday"
+                                                data-bs-original-title="Remove Holiday">
+                                                <i class="fa fa-fw fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+
+
+                </div>
+
+            </div>
+        </div>
+        <!-- END Dynamic Table with Export Buttons -->
+
+        <!-- Normal Block Modal -->
+        <div class="modal" id="modal-block-normal" tabindex="-1" role="dialog" aria-labelledby="modal-block-normal"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form id="addholidayForm" action="/admin/holiday/" method="POST" class="holiday-validation">
+                        <div class="block block-rounded block-transparent mb-0">
+                            <div class="block-header block-header-default">
+                                <h3 class="block-title">Add holiday</h3>
+                                <div class="block-options">
+                                    <button type="button" class="btn-block-option" data-bs-dismiss="modal"
+                                        aria-label="Close">
+                                        <i class="fa fa-fw fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="block-content fs-sm">
+
+                                <div class="mb-2">
+                                    <label for="month" class="form-label">Month</label>
+                                    <select id="monthSelect" name="month" class="form-select" required>
+                                        <option value="" hidden>Select Month</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="day" class="form-label">Day</label>
+                                    <input type="number" id="daySelect" name="day" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Holiday Description</label>
+                                    <input type="text" id="addDescription" name="description" class="form-control"
+                                        required>
+                                </div>
+
+
+                            </div>
+                            <div class="block-content block-content-full text-end bg-body">
+                                <button type="button" class="btn btn-sm btn-alt-secondary me-1"
+                                    data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- Edit Holiday Modal -->
+        <div class="modal" id="modal-edit-holiday" tabindex="-1" role="dialog" aria-labelledby="modal-edit-holiday"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form id="editHolidayForm" action="/admin/holiday/edit/" method="POST"
+                        class="edit-holiday-validation">
+                        <input type="hidden" name="holiday_id" id="edit-holiday-id">
+                        <div class="block block-rounded block-transparent mb-0">
+                            <div class="block-header block-header-default">
+                                <h3 class="block-title">Edit Holiday</h3>
+                                <div class="block-options">
+                                    <button type="button" class="btn-block-option" data-bs-dismiss="modal"
+                                        aria-label="Close">
+                                        <i class="fa fa-fw fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="block-content fs-sm">
+                                <input type="hidden" name="holiday_id" id="holidayIdEdit">
+                                <div class="mb-2">
+                                    <label for="month" class="form-label">Month</label>
+                                    <select id="monthSelectEdit" name="month" class="form-select" required>
+                                        <option value="" hidden>Select Month</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="day" class="form-label">Day</label>
+                                    <input type="number" id="daySelectEdit" name="day" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Holiday Description</label>
+                                    <input type="text" id="addDescriptionEdit" name="description" class="form-control"
+                                        required>
+                                </div>
+
+                            </div>
+                            <div class="block-content block-content-full text-end bg-body">
+                                <button type="button" class="btn btn-sm btn-alt-secondary me-1"
+                                    data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+    <div class="modal" id="modal-delete-holiday" tabindex="-1" role="dialog"
+    aria-labelledby="modal-delete-holiday" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="deleteHolidayForm" action="/admin/holiday/delete/" method="POST"
+                class="delete-holiday-validation">
+                <input type="hidden" name="holiday_id" id="delete-holiday-id">
+                <div class="block block-rounded block-transparent mb-0">
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Delete Holiday</h3>
+                        <div class="block-options">
+                            <button type="button" class="btn-block-option" data-bs-dismiss="modal"
+                                aria-label="Close">
+                                <i class="fa fa-fw fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="block-content fs-sm">
+                        <div class="mb-3">Are you sure you want to delete the <span id="holiday_delete_name"
+                                class="fw-semibold"></span> holiday?</div>
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <div class="flex-shrink-0">
+                                <i class="fa fa-fw fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="mb-0 small">
+                                    <span class="fw-semibold">Note: </span>Deleting the holiday will also affects
+                                    all the
+                                    <span class="fw-semibold">Attendance</span> associated with it.
+                                </p>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="block-content block-content-full text-end bg-body">
+                        <button type="button" class="btn btn-sm btn-alt-secondary me-1"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+    <script>
+        function deleteHoliday(holidayId, holidayName) {
+            document.getElementById("holiday_delete_name").innerText = holidayName;
+            document.getElementById("delete-holiday-id").value = holidayId;
+
+            // Show the modal using Bootstrap 5 API
+            const modal = new bootstrap.Modal(document.getElementById('modal-delete-holiday'));
+            modal.show();
+        }
+
+
+        document.getElementById('deleteHolidayForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+
+            const holidayId = document.getElementById('delete-holiday-id').value;
+
+            try {
+                const response = await fetch('/admin/holiday/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ holiday_id: holidayId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modal-delete-holiday'));
+                    modal.hide();
+
+                    // Show a success notification
+                    One.helpers('jq-notify', { type: 'success', icon: 'fa fa-check-circle me-1', message: 'Holiday deleted successfully!' });
+                    // Delay the redirection to allow the notification to be seen
+                    setTimeout(() => {
+                        window.location.href = "/admin/holiday"; // Redirect to the department page
+                    }, 2500); // Adjust delay as needed (2500ms = 2.5 seconds)
+                    // Optionally, refresh the page or update the department list
+                    // location.reload(); // Refresh the page to reflect changes
+                } else {
+                    // Show an error notification
+                    One.helpers('jq-notify', { type: 'danger', icon: 'fa fa-times-circle me-1', message: result.message || 'Failed to delete holiday.' });
+                }
+            } catch (error) {
+                console.error('Failed to delete holiday:', error);
+                One.helpers('jq-notify', { type: 'danger', icon: 'fa fa-times-circle me-1', message: 'An error occurred while deleting the holiday.' });
+            }
+        });
+
+    </script>

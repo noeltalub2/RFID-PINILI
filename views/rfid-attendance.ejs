@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>
+        <%=title%>
+    </title>
+
+    <!-- Icons -->
+    <!-- The following icons can be replaced with your own, they are used by desktop and mobile browsers -->
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="120x120" href="/assets/media/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/media/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/media/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/assets/media/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/assets/media/favicon/safari-pinned-tab.svg" color="#ffffff">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <!-- END Icons -->
+
+    <!-- Stylesheets -->
+    <!-- OneUI framework -->
+    <link rel="stylesheet" id="css-main" href="/assets/css/oneui.min.css">
+    <style>
+        .radio-tile-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* //set dimensions for invisible container */
+        .input-container {
+            position: relative;
+            width: 200px;
+            margin: 0.5rem;
+        }
+
+        /* //make actual radio input invisible
+    // + stretch to fill container */
+        .radio-button {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        /* //default tile styles */
+        .radio-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background-color: #6c757d;
+            border-radius: 3px;
+            padding: 1rem;
+            color: #ffffff;
+        }
+
+
+
+        .radio-tile-label {
+           
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+
+
+        }
+
+        /* //active tile styles */
+        .radio-button:checked+.radio-tile {
+            background-color: #d61f47;
+
+            color: #ffffff;
+
+        }
+
+        #rfidCard {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+    </style>
+    <!-- You can include a specific file from css/themes/ folder to alter the default color theme of the template. eg: -->
+    <!-- <link rel="stylesheet" id="css-theme" href="/assets/css/themes/amethyst.min.css"> -->
+    <!-- END Stylesheets -->
+</head>
+
+<body>
+
+    <div id="page-container" class="sidebar-dark side-scroll page-header-fixed page-header-dark main-content-boxed">
+
+
+        <nav id="sidebar" aria-label="Main Navigation">
+            <!-- Side Header -->
+            <div class="content-header bg-white-5">
+                <!-- Logo -->
+                <a class="fw-semibold text-dual" href="/">
+                    <span class="smini-visible">
+                        <i class="fa fa-circle-notch text-primary"></i>
+                    </span>
+                    <span class="smini-hide fs-5 tracking-wider">
+                        <img class="img-fluid" width="45" src="/assets/background/icon.png" alt="logo" />
+                        Web Based - RFID Pinili
+                    </span>
+                </a>
+                <!-- END Logo -->
+
+                <!-- Extra -->
+                <div>
+                    <!-- Options -->
+                    <div class="dropdown d-inline-block ms-1">
+                        <button type="button" class="btn btn-sm btn-alt-secondary" id="sidebar-themes-dropdown"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-brush"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end fs-sm smini-hide border-0"
+                            aria-labelledby="sidebar-themes-dropdown">
+                            <!-- Color Themes -->
+                            <!-- Layout API, functionality initialized in Template._uiHandleTheme() -->
+                            <a class="dropdown-item d-flex align-items-center justify-content-between fw-medium"
+                                data-toggle="theme" data-theme="default" href="#">
+                                <span>Default</span>
+                                <i class="fa fa-circle text-default"></i>
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between fw-medium"
+                                data-toggle="theme" data-theme="/assets/css/themes/amethyst.min.css" href="#">
+                                <span>Amethyst</span>
+                                <i class="fa fa-circle text-amethyst"></i>
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between fw-medium"
+                                data-toggle="theme" data-theme="/assets/css/themes/city.min.css" href="#">
+                                <span>City</span>
+                                <i class="fa fa-circle text-city"></i>
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between fw-medium"
+                                data-toggle="theme" data-theme="/assets/css/themes/flat.min.css" href="#">
+                                <span>Flat</span>
+                                <i class="fa fa-circle text-flat"></i>
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between fw-medium"
+                                data-toggle="theme" data-theme="/assets/css/themes/modern.min.css" href="#">
+                                <span>Modern</span>
+                                <i class="fa fa-circle text-modern"></i>
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between fw-medium"
+                                data-toggle="theme" data-theme="/assets/css/themes/smooth.min.css" href="#">
+                                <span>Smooth</span>
+                                <i class="fa fa-circle text-smooth"></i>
+                            </a>
+                            <!-- END Color Themes -->
+                        </div>
+                    </div>
+                    <!-- END Options -->
+
+                    <!-- Close Sidebar, Visible only on mobile screens -->
+                    <!-- Layout API, functionality initialized in Template._uiApiLayout() -->
+                    <a class="d-lg-none btn btn-sm btn-alt-secondary ms-1" data-toggle="layout"
+                        data-action="sidebar_close" href="javascript:void(0)">
+                        <i class="fa fa-fw fa-times"></i>
+                    </a>
+                    <!-- END Close Sidebar -->
+                </div>
+                <!-- END Extra -->
+            </div>
+            <!-- END Side Header -->
+
+            <!-- Sidebar Scrolling -->
+            <div class="js-sidebar-scroll">
+                <!-- Side Navigation -->
+                <div class="content-side">
+                    <ul class="nav-main">
+                        <li class="nav-main-item">
+                            <a class="nav-main-link active" href="gs_landing.html">
+                                <i class="nav-main-link-icon si si-home"></i>
+                                <span class="nav-main-link-name">Home</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+                <!-- END Side Navigation -->
+            </div>
+            <!-- END Sidebar Scrolling -->
+        </nav>
+        <!-- END Sidebar -->
+
+        <!-- Header -->
+        <header id="page-header">
+            <!-- Header Content -->
+            <div class="content-header">
+                <!-- Left Section -->
+                <div class="d-flex align-items-center">
+                    <!-- Logo -->
+                    <a class="fw-semibold fs-5 tracking-wider text-dual me-3" href="/">
+                        <img class="img-fluid" width="45" src="/assets/background/icon.png" alt="logo" />
+                        Web Based - RFID Pinili
+                    </a>
+                    <!-- END Logo -->
+                </div>
+                <!-- END Left Section -->
+
+                <!-- Right Section -->
+                <div class="d-flex align-items-center">
+                    <!-- Menu -->
+                    <div class="d-none d-lg-block">
+                        <ul class="nav-main nav-main-horizontal nav-main-hover">
+                            <li class="nav-main-item">
+                                <a class="nav-main-link active" href="/">
+                                    <i class="nav-main-link-icon si si-home"></i>
+                                    <span class="nav-main-link-name">Home</span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                    <!-- END Menu -->
+
+                    <!-- Toggle Sidebar -->
+                    <!-- Layout API, functionality initialized in Template._uiApiLayout() -->
+                    <button type="button" class="btn btn-sm btn-alt-secondary d-lg-none ms-1" data-toggle="layout"
+                        data-action="sidebar_toggle">
+                        <i class="fa fa-fw fa-bars"></i>
+                    </button>
+                    <!-- END Toggle Sidebar -->
+                </div>
+                <!-- END Right Section -->
+            </div>
+            <!-- END Header Content -->
+
+            <!-- Header Search -->
+            <div id="page-header-search" class="overlay-header bg-body-extra-light">
+                <div class="content-header">
+                    <form class="w-100" method="POST">
+                        <div class="input-group input-group-sm">
+                            <!-- Layout API, functionality initialized in Template._uiApiLayout() -->
+                            <button type="button" class="btn btn-alt-danger" data-toggle="layout"
+                                data-action="header_search_off">
+                                <i class="fa fa-fw fa-times-circle"></i>
+                            </button>
+                            <input type="text" class="form-control" placeholder="Search or hit ESC.."
+                                id="page-header-search-input" name="page-header-search-input">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- END Header Search -->
+
+            <!-- Header Loader -->
+            <!-- Please check out the Loaders page under Components category to see examples of showing/hiding it -->
+            <div id="page-header-loader" class="overlay-header bg-primary-lighter">
+                <div class="content-header">
+                    <div class="w-100 text-center">
+                        <i class="fa fa-fw fa-circle-notch fa-spin text-primary"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- END Header Loader -->
+        </header>
+        <!-- END Header -->
+
+        <!-- Main Container -->
+        <main id="main-container">
+            <div class="content">
+                <!-- Your Block -->
+                <div class="block block-rounded">
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">
+                            RFID Attendance Monitoring System
+                        </h3>
+                        <div class="block-options">
+                            <button type="button" class="btn-block-option" data-toggle="block-option"
+                                data-action="fullscreen_toggle"><i class="si si-size-fullscreen"></i></button>
+
+                        </div>
+                    </div>
+                    <div class="block-content fs-sm">
+                        <div class="row gx-3 justify-content-center align-items-start mb-2">
+                            <div class="col-lg-4">
+                                <h6 class="text-center">SCAN YOUR RFID CARD</h6>
+                                <div id="rfid-scan" class="mb-2">
+                                    <div class="text-center">
+                                        <img src="/images/rfid-scan.png" alt="Rfid Scan" class="img-fluid" width="400"
+                                            id="rfid-image">
+                                    </div>
+                                </div>
+                                <div id="rfid-profile" class="d-none mt-3">
+                                    <div class="text-center">
+                                        <img src="" alt="Rfid Scan" class="" width="220" id="rfid-profile-img">
+                                    </div>
+                                </div>
+                                <div class="text-center fw-bold fs-5 mt-1" id="gatepass_data">
+                                    <input type="text" id="rfidCard" maxlength="10">
+                                    <p class="mb-0" id="id"></p>
+                                    <p class="mb-0" id="fullname"></p>
+                                    <p class="mb-0" id="timestamp"></p>
+                                    <p class="text-bg-success d-inline-block px-1" id="message"></p>
+                                    <p class="text-bg-danger d-inline-block px-1" id="error-message"></p>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <div class="text-center">
+                                            <h1 id="time" class="display-4 fw-semibold mb-1"></h1>
+                                            <h3 id="date" class="mb-1"></h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="event-container" class="mb-2 text-center">
+                                    <% if (holidays.length > 0) {%>
+                                        <input type="hidden" id="holiday_id" value="<%=holidays[0].id%>">
+                                        <h5>HOLIDAY: <%=holidays[0].description%></h5>
+                                    <%}%>
+                                    <div class="radio-tile-group">
+
+                                        <div class="input-container">
+                                            <input id="time_in_am" class="radio-button" type="radio" name="attendance"
+                                                value="timein" />
+                                            <div class="radio-tile">
+
+                                                <label for="time_in" class="radio-tile-label">Time In</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="input-container">
+                                            <input id="time_out_am" class="radio-button" type="radio" name="attendance"
+                                                value="timeout" />
+                                            <div class="radio-tile">
+
+                                                <label for="time_out" class="radio-tile-label">Time Out</label>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                                <div id="instruction-container" class="mb-3 p-3">
+                                    <p class="fw-bold mb-1">How to use:</p>
+                                    <ol>
+                                        <li class="instruction">Make sure you have your RFID card with you before
+                                            proceeding.</li>
+                                            <li class="instruction">Click <em>"Time In"</em> or <em>"Time Out"</em> button</li>
+                                        <li class="instruction">Tap your RFID into the reader</li>
+                                    </ol>
+                                    <p class="fw-bold">Press F5 to refresh the system if it does not work and make sure
+                                        the RFID scanner is plug in or working.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END Your Block -->
+            </div>
+
+
+        </main>
+        <!-- END Main Container -->
+
+
+    </div>
+    <!-- END Page Container -->
+    <!-- Footer -->
+    <footer id="page-footer" class="bg-body-light">
+        <div class="content py-3">
+            <div class="row fs-sm">
+                <div class="col-sm-6 order-sm-2 py-1 text-center text-sm-end">
+                    Capstone <i class="fa fa-heart text-danger"></i> by <a class="fw-semibold" href="#">MMSU CIT
+                        Student</a>
+                </div>
+                <div class="col-sm-6 order-sm-1 py-1 text-center text-sm-start">
+                    <a class="fw-semibold" href="#">RFID Attendance</a>
+                    &copy; <span data-toggle="year-copy"></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- END Footer -->
+    <!--
+        OneUI JS
+
+        Core libraries and functionality
+        webpack is putting everything together at /assets/_js/main/app.js
+    -->
+    <script src="/assets/js/oneui.app.min.js"></script>
+
+    <script src="/assets/js/lib/jquery.min.js"></script>
+    <script type="text/javascript">
+
+        var attendance_type = "";
+        var radios = document.querySelectorAll('input[type=radio][name="attendance"]');
+        radios.forEach(radio => radio.addEventListener('change', () => {
+            attendance_type = radio.value;
+            document.getElementById('rfidCard').focus();// Focus the RFID input after selecting a radio button
+        }));
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const updateTime = () => {
+                const now = new Date();
+                document.getElementById("date").innerHTML = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById("time").innerHTML = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+        $(document).ready(function () {
+            var rfidCard = $('#rfidCard');
+            var holiday = $('#holiday_id').val();
+         
+            rfidCard.focus();
+            $('body').mousemove(function () {
+                rfidCard.focus();
+            });
+            rfidCard.on('input', function () {
+                if (rfidCard.val().length === 10) {
+                    const dataToSend = { rfid: rfidCard.val(), attendance_type, holiday };
+                    fetch('/rfid-attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(dataToSend),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.isValid) {
+                                $('#rfid-scan').hide();
+                                $('#rfid-profile-img').prop('src', `/images/profile/${data.profile}`);
+                                $('#rfid-profile').removeClass('d-none').show();
+                                $('#fullname').text(data.fullname);
+                                $('#timestamp').text(data.timestamp);
+                                $('#message').text(data.message);
+                                setTimeout(function () {
+                                    rfidCard.val('');
+                                    $('#fullname').text('');
+                                    $('#timestamp').text('');
+                                    $('#message').text('');
+                                    $('#rfid-scan').show();
+                                    $('#rfid-profile').hide();
+                                    $('#rfid-profile-img').prop('src', '');
+                                }, 2000);
+                            } else {
+                                $('#rfid-image').prop('src', '/images/invalid.png');
+                                $('#rfid-image').prop('width', '250');
+                                $('#error-message').text(data.error);
+                                setTimeout(function () {
+                                    rfidCard.val('');
+                                    $('#error-message').text('');
+                                    $('#rfid-image').prop('src', '/images/rfid-scan.png');
+                                    $('#rfid-image').prop('width', '400');
+                                }, 2000);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error validating RFID card:', error);
+                        });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

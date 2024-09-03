@@ -1,0 +1,265 @@
+<% layout('./Layout/layout.ejs') -%>
+
+    <div class="content">
+
+
+        <div class="row">
+            <!-- User Details -->
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-thumbs-up text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= totalAttendance.present_count || 0 %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Total Present
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-thumbs-down text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= totalAttendance.absent_count || 0 %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Total Absent
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-calendar-days text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= upcomingHoliday || 0 %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Upcoming Holiday
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+
+           
+
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-clock text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= attendance_summary.avg_working_hours ? parseFloat(attendance_summary.avg_working_hours).toFixed(2) : 0 %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Avg Working Hours
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-hourglass-start text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= attendance_summary.avg_time_in ? new Date('1970-01-01T' + attendance_summary.avg_time_in).toLocaleTimeString([],
+                                    {hour: '2-digit' , minute: '2-digit' }) : 'Not Available' %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Avg Time In
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-hourglass-start text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= attendance_summary.avg_time_out ? new Date('1970-01-01T' + attendance_summary.avg_time_out).toLocaleTimeString([],
+                                {hour: '2-digit' , minute: '2-digit' }) : 'Not Available' %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Avg Time Out
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+
+            
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-chart-pie text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= attendancePresentTotal.attendance_percentage ? parseFloat(attendancePresentTotal.attendance_percentage).toFixed(2) + '%' : 'Not Available' %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                Attendance Percentage
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-user-clock text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= attendancePresentTotal.total_hours ? parseFloat(attendancePresentTotal.total_hours).toFixed(2) : 'Not Available' %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                               Total Hours Worked
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <a class="block block-rounded block-link-pop" href="javascript:void(0)">
+                    <div class="block-content block-content-full d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa fa-2x fa-id-card text-muted"></i>
+                        </div>
+                        <dl class="ms-3 text-end mb-0">
+                            <dt class="h3 fw-extrabold mb-0">
+                                <%= rfidCard.cardnumber || 0 %>
+                            </dt>
+                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                <span
+                                    class="small fw-semibold d-inline-block py-0 px-2 rounded-pill  <%= rfidCard.is_active ? 'bg-success' : 'bg-danger' %> text-white">
+                                    <%= rfidCard.is_active ? 'Active' : 'Inactive' %>
+                                </span> RFID Card
+                            </dd>
+                        </dl>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="row">
+
+            <div class="col-lg-12">
+                <div class="block block-rounded">
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Monthly Attendance Summary</h3>
+                        <div class="block-options">
+
+                        </div>
+                    </div>
+                    <div class="block-content block-content-full text-center">
+                        <div class="">
+                            <!-- Radar Chart Container -->
+                            <canvas id="attendanceChart" width="420" height="500"
+                                style="display: block; box-sizing: border-box; max-height: 500px;  width: 420;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Data fetched from the SQL query and passed into the EJS template
+      const labels = <%- JSON.stringify(attendanceMonth.map(entry => entry.log_date)) %>;
+      const presentData = <%- JSON.stringify(attendanceMonth.map(entry => entry.present_count)) %>;
+      const absentData = <%- JSON.stringify(attendanceMonth.map(entry => entry.absent_count)) %>;
+      const lateData = <%- JSON.stringify(attendanceMonth.map(entry => entry.late_count)) %>;
+      const earlyTimeoutData = <%- JSON.stringify(attendanceMonth.map(entry => entry.early_timeout_count)) %>;
+  
+      const ctx = document.getElementById('attendanceChart').getContext('2d');
+      const attendanceChart = new Chart(ctx, {
+        type: 'line', // You can change this to 'bar', 'line', etc.
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Present',
+              data: presentData,
+              borderColor: 'green',
+              backgroundColor: 'rgba(0, 255, 0, 0.2)',
+              fill: false
+            },
+            {
+              label: 'Absent',
+              data: absentData,
+              borderColor: 'red',
+              backgroundColor: 'rgba(255, 0, 0, 0.2)',
+              fill: false
+            },
+            {
+              label: 'Late Timein',
+              data: lateData,
+              borderColor: 'orange',
+              backgroundColor: 'rgba(255, 165, 0, 0.2)',
+              fill: false
+            },
+            {
+              label: 'Early Timeout',
+              data: earlyTimeoutData,
+              borderColor: 'blue',
+              backgroundColor: 'rgba(0, 0, 255, 0.2)',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Count'
+              },
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1 // This sets the step size to 1
+              }
+            }
+          }
+        }
+      });
+    </script>
