@@ -1,4 +1,5 @@
 // app.js
+import "dotenv/config.js";
 import express from "express";
 import cookieParser from "cookie-parser";
 import connectFlash from "connect-flash";
