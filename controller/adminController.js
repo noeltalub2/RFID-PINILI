@@ -182,12 +182,12 @@ const checkRFID = async (req, res) => {
 const getDashboard = async (req, res) => {
 	const todaySummary = (
 		await query(
-			"SELECT COUNT(CASE WHEN status_timein = 'early' OR status_timein = 'ontime' THEN 1 END) AS present_count, COUNT(CASE WHEN status_timein = 'absent' THEN 1 END) AS absent_count, COUNT(CASE WHEN status_timein = 'late' THEN 1 END) AS late_count, COUNT(CASE WHEN status_timeout = 'early' THEN 1 END) AS early_timeout_count FROM attendance WHERE log_date = CURDATE();"
+			"SELECT COUNT(CASE WHEN status_timein = 'early' OR status_timein = 'ontime' OR status_timein = 'late' THEN 1 END) AS present_count, COUNT(CASE WHEN status_timein = 'absent' OR status_timeout = 'absent' THEN 1 END) AS absent_count, COUNT(CASE WHEN status_timein = 'late' THEN 1 END) AS late_count, COUNT(CASE WHEN status_timeout = 'early' THEN 1 END) AS early_timeout_count FROM attendance WHERE log_date = CURDATE();"
 		)
 	)[0];
 
 	const attendanceMonth = await query(
-		"WITH date_series AS ( SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01') + INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY AS log_date FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c WHERE a.a + (10 * b.a) + (100 * c.a) < DAY(LAST_DAY(CURDATE())) ) SELECT ds.log_date, COALESCE(COUNT(CASE WHEN status_timein = 'early' OR status_timein = 'ontime' THEN 1 END), 0) AS present_count, COALESCE(COUNT(CASE WHEN status_timein = 'absent' THEN 1 END), 0) AS absent_count, COALESCE(COUNT(CASE WHEN status_timein = 'late' THEN 1 END), 0) AS late_count, COALESCE(COUNT(CASE WHEN status_timeout = 'early' THEN 1 END), 0) AS early_timeout_count FROM date_series ds LEFT JOIN attendance a ON ds.log_date = DATE(a.log_date) WHERE ds.log_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND ds.log_date <= LAST_DAY(CURDATE()) GROUP BY ds.log_date ORDER BY ds.log_date ASC; "
+		"WITH date_series AS ( SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01') + INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY AS log_date FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c WHERE a.a + (10 * b.a) + (100 * c.a) < DAY(LAST_DAY(CURDATE())) ) SELECT ds.log_date, COALESCE(COUNT(CASE WHEN status_timein = 'early' OR status_timein = 'late' OR status_timein = 'ontime' THEN 1 END), 0) AS present_count, COALESCE(COUNT(CASE WHEN status_timein = 'absent' THEN 1 END), 0) AS absent_count, COALESCE(COUNT(CASE WHEN status_timein = 'late' THEN 1 END), 0) AS late_count, COALESCE(COUNT(CASE WHEN status_timeout = 'early' THEN 1 END), 0) AS early_timeout_count FROM date_series ds LEFT JOIN attendance a ON ds.log_date = DATE(a.log_date) WHERE ds.log_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND ds.log_date <= LAST_DAY(CURDATE()) GROUP BY ds.log_date ORDER BY ds.log_date ASC; "
 	);
 
 	const attendancePercentage = (
@@ -1000,12 +1000,12 @@ const getExportExcel = async (req, res) => {
 	
 	// Create a new workbook and add a worksheet
 	const workbook = new ExcelJS.Workbook();
-	const worksheet = workbook.addWorksheet('Attendance');
+	const worksheet = workbook.addWorksheet('Attendance Report');
   
 	// Define the date range for headers
 	const startDate = new Date(from);
-	const endDate = new Date(to);
-	
+	const endDateForQuery = new Date(new Date(to).setDate(new Date(to).getDate() + 1));
+	const endDate = new Date(to)
 	const dateHeaders = [];
   
 	// Generate date headers
@@ -1053,7 +1053,7 @@ const getExportExcel = async (req, res) => {
 	   FROM users u
 	   LEFT JOIN attendance a ON u.uuid = a.user_uuid
 	   AND a.log_date  BETWEEN ? AND ?`,
-	  [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
+	  [startDate.toISOString().split('T')[0], endDateForQuery.toISOString().split('T')[0]],
 	  (err, results) => {
 		if (err) {
 		  console.error(err);
