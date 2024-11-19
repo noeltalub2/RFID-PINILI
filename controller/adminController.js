@@ -6,6 +6,7 @@ import createToken from "../utils/token.js";
 import path from 'path';
 import ExcelJS from 'exceljs';
 import moment from "moment";
+import PDFDocument from 'pdfkit';
 const getSignIn = (req, res) => {
 	res.render("Admin/signin", { username: req.flash("username")[0] });
 };
@@ -999,156 +1000,134 @@ const getAttendanceReport = async (req, res) => {
 };
 
 const getExportExcel = async (req, res) => {
-	const { month, year } = req.query; // Accept month and year from the query
-  
-	if (!month || !year) {
-	  res.status(400).send('Month and Year are required');
-	  return;
-	}
-  
-	// Create a new workbook and add a worksheet
-	const workbook = new ExcelJS.Workbook();
-	const worksheet = workbook.addWorksheet('Attendance Report');
-  
-	// Generate the start and end dates for the specified month and year
-	const startDate = new Date(year, month - 1, 1); // First day of the given month
-	const endDate = new Date(year, month, 0); // Last day of the given month
-  
-	// Generate date headers (all dates in the given month)
-	const dateHeaders = [];
-	let currentDate = new Date(startDate);
-	while (currentDate <= endDate) {
-	  dateHeaders.push(currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
-	  currentDate.setDate(currentDate.getDate() + 1);
-	}
-  
-	// Fetch attendance data for the specified month and year
-	db.query(
-	  `SELECT u.firstname, u.lastname, a.log_date, a.time_in, a.time_out, a.total_hours, a.status_timein, a.status_timeout, h.description
-	   FROM users u
-	   LEFT JOIN attendance a ON u.uuid = a.user_uuid
-	   LEFT JOIN holidays h ON a.log_date = h.holiday_date
-	   WHERE a.log_date BETWEEN ? AND ?`,
-	  [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
-	  (err, results) => {
-		if (err) {
-		  console.error(err);
-		  res.status(500).send('Database query error');
-		  return;
-		}
-  
-		const employeeMap = new Map();
-		let maxEmployeeNameLength = 0;
-  
-		// Process results
-		results.forEach(row => {
-		  const employeeName = `${row.firstname} ${row.lastname}`;
-		  const logDate = new Date(row.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-		  const timeIn = row.time_in || '-';
-		  const timeOut = row.time_out || '-';
-		  const totalHours = row.total_hours || '-';
-		  const holidayName = row.holiday_name || ''; // Get holiday name if exists
-  
-		  if (!employeeMap.has(employeeName)) {
-			employeeMap.set(employeeName, {});
-			maxEmployeeNameLength = Math.max(maxEmployeeNameLength, employeeName.length);
-		  }
-  
-		  employeeMap.get(employeeName)[logDate] = { timeIn, timeOut, totalHours, holidayName };
-		});
-  
-		let rowIndex = 1;
-  
-		// Add employee names and attendance data
-		employeeMap.forEach((attendance, employeeName) => {
-		  worksheet.getCell(rowIndex, 1).value = `Employee: ${employeeName}`; // Employee name in column A
-		  worksheet.getCell(rowIndex, 1).font = { bold: true }; // Bold the employee name
-		  rowIndex++;
-  
-		  worksheet.getCell(rowIndex, 1).value = `For this month of ${new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}`; // Month Header
-		  worksheet.getCell(rowIndex, 1).font = { bold: true }; // Bold the month header
-		  rowIndex++;
-  
-		  // Set date headers and attendance data for each employee
-		  worksheet.getCell(rowIndex, 1).value = 'Date';
-		  worksheet.getCell(rowIndex, 2).value = 'Time In';
-		  worksheet.getCell(rowIndex, 3).value = 'Time Out';
-		  worksheet.getCell(rowIndex, 4).value = 'Holiday';
-		  rowIndex++;
-  
-		  dateHeaders.forEach(date => {
-			const logData = attendance[date] || { timeIn: '-', timeOut: '-', totalHours: '-', holidayName: '' };
-			worksheet.getCell(rowIndex, 1).value = date; // Date in first column
-			worksheet.getCell(rowIndex, 2).value = logData.timeIn; // "Time In"
-			worksheet.getCell(rowIndex, 3).value = logData.timeOut; // "Time Out"
-			worksheet.getCell(rowIndex, 4).value = logData.holidayName || '-'; // Holiday name if available
-			rowIndex++;
-		  });
-  
-		  // Add "Certify" text at the end of each employee's attendance record
-		  worksheet.getCell(rowIndex, 1).value = 'Certify:';
-		  worksheet.getCell(rowIndex, 1).font = { bold: true, italic: true };
-		  rowIndex++;
-  
-		  worksheet.getCell(rowIndex, 1).value = 'I hereby certify that the attendance details above are correct and complete.';
-		  worksheet.getCell(rowIndex, 1).alignment = { horizontal: 'center' };
-		  rowIndex++;
-  
-		  worksheet.getCell(rowIndex, 1).value = '_____________________';
-		  worksheet.getCell(rowIndex, 1).alignment = { horizontal: 'center' };
-		  rowIndex++;
-  
-		  worksheet.getCell(rowIndex, 1).value = 'Authorized Signatory';
-		  worksheet.getCell(rowIndex, 1).alignment = { horizontal: 'center' };
-		  rowIndex++;
-  
-		  rowIndex++; // Add space between employees
-		});
-  
-		// Set the width of the "Employee Name" column based on the longest name
-		worksheet.getColumn(1).width = maxEmployeeNameLength + 2; // Add some padding to the width
-  
-		// Set fixed width for all other columns
-		worksheet.columns.forEach((column, index) => {
-		  if (index > 0) { // Skip the first column ("Employee Name")
-			column.width = 15; // Fixed width for all other columns
-		  }
-		});
-  
-		// Add borders to all cells for better readability
-		worksheet.eachRow({ includeEmpty: true }, row => {
-		  row.eachCell({ includeEmpty: true }, cell => {
-			cell.border = {
-			  top: { style: 'thin' },
-			  left: { style: 'thin' },
-			  bottom: { style: 'thin' },
-			  right: { style: 'thin' }
-			};
-		  });
-		});
-  
-		// Set up the response headers
-		res.setHeader(
-		  'Content-Type',
-		  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-		);
-		res.setHeader(
-		  'Content-Disposition',
-		  `attachment; filename="Attendance_Report_${year}-${month}.xlsx"`
-		);
-  
-		// Write the workbook to the response
-		workbook.xlsx.write(res)
-		  .then(() => {
-			res.end();
-		  })
-		  .catch(error => {
-			console.error(error);
-			res.status(500).send('Error generating Excel file');
-		  });
-	  }
-	);
-  };
+  const { month, year } = req.query;
+
+  if (!month || !year) {
+    res.status(400).send('Month and Year are required');
+    return;
+  }
+
+  // Generate start and end dates
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  // Generate date headers
+  const dateHeaders = [];
+  let currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    dateHeaders.push(currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  db.query(
+    `SELECT u.firstname, u.lastname, a.log_date, a.total_hours, a.time_in, a.time_out, h.description AS holiday_name
+     FROM users u
+     LEFT JOIN attendance a ON u.uuid = a.user_uuid
+     LEFT JOIN holidays h ON a.log_date = h.holiday_date
+     WHERE a.log_date BETWEEN ? AND ?`,
+    [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Database query error');
+        return;
+      }
+
+      const employeeMap = new Map();
+      results.forEach(row => {
+        const employeeName = `${row.firstname} ${row.lastname}`;
+        const logDate = new Date(row.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const timeIn = row.time_in || '-';
+        const timeOut = row.time_out || '-';
+        const holidayName = row.holiday_name || '';
+
+        if (!employeeMap.has(employeeName)) {
+          employeeMap.set(employeeName, {});
+        }
+
+        // Calculate hours worked if time_in and time_out are available
+        let calculatedHours = '-';
+        if (timeIn !== '-' && timeOut !== '-') {
+			calculatedHours = parseFloat(row.total_hours) > 8.00 ? row.total_hours : `${row.total_hours} (Undertime)` //0.00
+        }
+
+        employeeMap.get(employeeName)[logDate] = { timeIn, timeOut, calculatedHours, holidayName };
+      });
+
+      const doc = new PDFDocument({ margin: 30 });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Attendance_Report_${year}-${month}.pdf"`);
+      doc.pipe(res);
+
+      employeeMap.forEach((attendance, employeeName) => {
+        doc.fontSize(14).font('Helvetica-Bold').text(`Employee: ${employeeName}`, { underline: true });
+        doc.fontSize(12).text(`Month: ${new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}`);
+        doc.moveDown();
+
+        // Table Headers
+        const tableTop = doc.y; // Track the starting Y position of the table
+        const columnWidths = [100, 100, 100, 100, 150];
+        const rowHeight = 16;
+
+        // Draw Header Row
+        doc.fontSize(9).font('Helvetica-Bold');
+        drawRow(doc, tableTop, columnWidths, rowHeight, ['Date', 'Time In', 'Time Out', 'Calculated Hours', 'Holiday']);
+
+        // Draw Attendance Rows
+        doc.font('Helvetica');
+        let currentY = tableTop + rowHeight;
+        dateHeaders.forEach(date => {
+          const logData = attendance[date] || { timeIn: '-', timeOut: '-', calculatedHours: '-', holidayName: '' };
+          drawRow(doc, currentY, columnWidths, rowHeight, [
+            date,
+            logData.timeIn,
+            logData.timeOut,
+            logData.calculatedHours,
+            logData.holidayName,
+          ]);
+          currentY += rowHeight;
+
+          // Add new page if the rows exceed the page height
+          if (currentY > doc.page.height - 50) {
+            doc.addPage();
+            currentY = 50; // Reset the Y position
+            drawRow(doc, currentY, columnWidths, rowHeight, ['Date', 'Time In', 'Time Out', 'Calculated Hours', 'Holiday']);
+            currentY += rowHeight;
+          }
+        });
+
+        doc.moveDown(2);
+
+        // Certify Section
+        doc.font('Helvetica-Bold').text('Certify:', { align: 'left' });
+        doc.font('Helvetica').text('I hereby certify that the attendance details above are correct and complete.', { align: 'center' });
+        doc.text('_____________________', { align: 'center' });
+        doc.text('Authorized Signatory', { align: 'center' });
+        doc.addPage(); // Add new page for the next employee
+      });
+
+      doc.end();
+    }
+  );
+
+  // Helper function to draw a row in the table
+  function drawRow(doc, y, columnWidths, height, rowValues) {
+    let x = doc.page.margins.left; // Starting X position for the first column
+
+    rowValues.forEach((text, i) => {
+      // Draw cell borders
+      doc.rect(x, y, columnWidths[i], height).stroke();
+
+      // Add text inside the cell
+      doc.text(text, x + 5, y + 5, { width: columnWidths[i] - 10, align: 'left' });
+
+      // Update X for the next column
+      x += columnWidths[i];
+    });
+  }
+};
+
+
   
   
   
