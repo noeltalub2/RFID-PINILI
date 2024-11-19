@@ -306,7 +306,37 @@
                             window.calendar.addEvent(timeOutEvent);
 
 
-                        }
+                        }if (entry.time_in && entry.time_out) {
+    // Specify the time format (adjust if needed)
+    const timeFormat = "h:mm:ss A"; // 12-hour format with AM/PM
+
+    // Parse time_in and time_out explicitly
+    const timeIn = moment(entry.time_in, timeFormat);
+    const timeOut = moment(entry.time_out, timeFormat);
+
+    // Ensure valid moment objects
+    if (!timeIn.isValid() || !timeOut.isValid()) {
+        console.error("Invalid time format for time_in or time_out:", entry.time_in, entry.time_out);
+        return;
+    }
+
+    // Calculate the total duration in hours (floating-point)
+    const duration = timeOut.diff(timeIn, 'hours', true); // Accurate floating-point duration
+
+    // Check if duration is less than 8 hours
+    if (duration < 8) {
+        // Create an event for work duration below 8 hours
+        const shortHoursEvent = {
+            title: 'Undertime',
+            start: datePart , // Use timeIn as the event's start time
+            color: '#FF0000', // Orange color to highlight the event
+            allDay: true
+        };
+        // Add the event to the calendar
+        window.calendar.addEvent(shortHoursEvent);
+    }
+}
+
                     });
 
                     // Re-render the calendar to ensure updates are shown

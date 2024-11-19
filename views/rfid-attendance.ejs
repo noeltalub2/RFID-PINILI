@@ -440,6 +440,12 @@
                                 $('#fullname').text(data.fullname);
                                 $('#timestamp').text(data.timestamp);
                                 $('#message').text(data.message);
+                                const speech = new SpeechSynthesisUtterance(`${data.fullname} ${data.message} ${data.timestamp}`);
+
+                                speech.pitch = 1; // Range: 0 to 2
+                                speech.rate = 1;  // Range: 0.1 to 10
+                                speech.volume = 1; // Range: 0 to 1
+                                window.speechSynthesis.speak(speech);
                                 setTimeout(function () {
                                     rfidCard.val('');
                                     $('#fullname').text('');
@@ -453,6 +459,12 @@
                                 $('#rfid-image').prop('src', '/images/invalid.png');
                                 $('#rfid-image').prop('width', '250');
                                 $('#error-message').text(data.error);
+                                const speech = new SpeechSynthesisUtterance(data.error);
+
+speech.pitch = 1; // Range: 0 to 2
+speech.rate = 1;  // Range: 0.1 to 10
+speech.volume = 1; // Range: 0 to 1
+window.speechSynthesis.speak(speech);
                                 setTimeout(function () {
                                     rfidCard.val('');
                                     $('#error-message').text('');
@@ -462,6 +474,12 @@
                             }
                         })
                         .catch(error => {
+                            const speech = new SpeechSynthesisUtterance(`There was an error validating your RFID card`);
+
+speech.pitch = 1; // Range: 0 to 2
+speech.rate = 1;  // Range: 0.1 to 10
+speech.volume = 1; // Range: 0 to 1
+window.speechSynthesis.speak(speech);
                             console.error('Error validating RFID card:', error);
                         });
                 }

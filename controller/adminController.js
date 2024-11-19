@@ -985,75 +985,51 @@ const getAttendanceId = async (req, res) => {
 
 const getAttendanceReport = async (req, res) => {
 	const recentAttendance = await query(
-		"SELECT u.profile_url, u.firstname, u.lastname, e.department, e.designation, a.time_in, a.time_out, a.total_hours, a.status_timein, a.status_timeout, a.log_date FROM users u LEFT JOIN employment e ON u.uuid = e.user_uuid LEFT JOIN attendance a ON u.uuid = a.user_uuid ORDER BY a.modified_at DESC"
+		"SELECT u.profile_url, u.firstname, u.lastname, e.department, e.designation, a.time_in, a.time_out, a.total_hours, a.status_timein, a.status_timeout, a.log_date FROM users u LEFT JOIN employment e ON u.uuid = e.user_uuid LEFT JOIN attendance a ON u.uuid = a.user_uuid WHERE a.log_date IS NOT NULL ORDER BY a.modified_at DESC;"
 	);
+	const today = new Date();
+	const currentMonth = today.getMonth() + 1; // Adding 1 to get the correct month number
+	const currentYear = today.getFullYear();
 	res.render("Admin/attendance_report", {
 		title: "Attendance Report",
 		page: "report-attendance",
 		pagetitle: "All Attendance Report",
-		recentAttendance,
+		recentAttendance, currentMonth, currentYear
 	});
 };
 
 const getExportExcel = async (req, res) => {
-	const { from, to } = req.query;
-	
+	const { month, year } = req.query; // Accept month and year from the query
+  
+	if (!month || !year) {
+	  res.status(400).send('Month and Year are required');
+	  return;
+	}
+  
 	// Create a new workbook and add a worksheet
 	const workbook = new ExcelJS.Workbook();
 	const worksheet = workbook.addWorksheet('Attendance Report');
   
-	// Define the date range for headers
-	const startDate = new Date(from);
-	const endDateForQuery = new Date(new Date(to).setDate(new Date(to).getDate() + 1));
-	const endDate = new Date(to)
-	const dateHeaders = [];
+	// Generate the start and end dates for the specified month and year
+	const startDate = new Date(year, month - 1, 1); // First day of the given month
+	const endDate = new Date(year, month, 0); // Last day of the given month
   
-	// Generate date headers
+	// Generate date headers (all dates in the given month)
+	const dateHeaders = [];
 	let currentDate = new Date(startDate);
 	while (currentDate <= endDate) {
 	  dateHeaders.push(currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
 	  currentDate.setDate(currentDate.getDate() + 1);
 	}
   
-	// Merge and center "Employee Name" header
-	worksheet.mergeCells('A1:A2');
-	const employeeHeaderCell = worksheet.getCell('A1');
-	employeeHeaderCell.value = 'Employee Name';
-	employeeHeaderCell.alignment = { vertical: 'middle', horizontal: 'center' }; // Center the header
-	employeeHeaderCell.font = { bold: true }; // Bold the header
-  
-	// Set column headers for dates and attendance details
-	dateHeaders.forEach((date, index) => {
-	  const colIndex = index * 3 + 2; // Calculate column index for the "Time In" (even columns)
-	  
-	  // Set merged cell for the date
-	  worksheet.mergeCells(1, colIndex, 1, colIndex + 2);
-	  const dateCell = worksheet.getCell(1, colIndex);
-	  dateCell.value = date; // Set date header
-	  dateCell.alignment = { horizontal: 'center' }; // Center the date header
-	  dateCell.font = { bold: true }; // Bold the date header
-  
-	  // Set "Time In", "Time Out", and "Total Hours" under each date
-	  worksheet.getCell(2, colIndex).value = 'Time In';
-	  worksheet.getCell(2, colIndex + 1).value = 'Time Out';
-	  worksheet.getCell(2, colIndex + 2).value = 'Total Hours';
-	  worksheet.getCell(2, colIndex).font = { bold: true };
-	  worksheet.getCell(2, colIndex + 1).font = { bold: true };
-	  worksheet.getCell(2, colIndex + 2).font = { bold: true };
-  
-	  // Set alignment for "Time In", "Time Out", and "Total Hours" headers
-	  worksheet.getCell(2, colIndex).alignment = { horizontal: 'center' };
-	  worksheet.getCell(2, colIndex + 1).alignment = { horizontal: 'center' };
-	  worksheet.getCell(2, colIndex + 2).alignment = { horizontal: 'center' };
-	});
-  
-	// Fetch attendance data from the database
+	// Fetch attendance data for the specified month and year
 	db.query(
-	  `SELECT u.firstname, u.lastname, a.log_date, a.time_in, a.time_out, a.total_hours, a.status_timein, a.status_timeout
+	  `SELECT u.firstname, u.lastname, a.log_date, a.time_in, a.time_out, a.total_hours, a.status_timein, a.status_timeout, h.description
 	   FROM users u
 	   LEFT JOIN attendance a ON u.uuid = a.user_uuid
-	   AND a.log_date  BETWEEN ? AND ?`,
-	  [startDate.toISOString().split('T')[0], endDateForQuery.toISOString().split('T')[0]],
+	   LEFT JOIN holidays h ON a.log_date = h.holiday_date
+	   WHERE a.log_date BETWEEN ? AND ?`,
+	  [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
 	  (err, results) => {
 		if (err) {
 		  console.error(err);
@@ -1071,40 +1047,62 @@ const getExportExcel = async (req, res) => {
 		  const timeIn = row.time_in || '-';
 		  const timeOut = row.time_out || '-';
 		  const totalHours = row.total_hours || '-';
+		  const holidayName = row.holiday_name || ''; // Get holiday name if exists
   
 		  if (!employeeMap.has(employeeName)) {
 			employeeMap.set(employeeName, {});
 			maxEmployeeNameLength = Math.max(maxEmployeeNameLength, employeeName.length);
 		  }
   
-		  employeeMap.get(employeeName)[logDate] = { timeIn, timeOut, totalHours };
+		  employeeMap.get(employeeName)[logDate] = { timeIn, timeOut, totalHours, holidayName };
 		});
   
+		let rowIndex = 1;
+  
 		// Add employee names and attendance data
-		let rowIndex = 3; // Start from the third row
 		employeeMap.forEach((attendance, employeeName) => {
-		  const employeeCell = worksheet.getCell(rowIndex, 1);
-		  employeeCell.value = employeeName; // Employee name in column A
-		  employeeCell.font = { bold: true }; // Bold the employee name
+		  worksheet.getCell(rowIndex, 1).value = `Employee: ${employeeName}`; // Employee name in column A
+		  worksheet.getCell(rowIndex, 1).font = { bold: true }; // Bold the employee name
+		  rowIndex++;
   
-		  dateHeaders.forEach((date, index) => {
-			const colIndex = index * 3 + 2; // Calculate column index for "Time In"
-			const logData = attendance[date] || { timeIn: '-', timeOut: '-', totalHours: '-' };
-			
-			const timeInCell = worksheet.getCell(rowIndex, colIndex);
-			const timeOutCell = worksheet.getCell(rowIndex, colIndex + 1);
-			const totalHoursCell = worksheet.getCell(rowIndex, colIndex + 2);
-			timeInCell.value = logData.timeIn;    // "Time In" data
-			timeOutCell.value = logData.timeOut; // "Time Out" data
-			totalHoursCell.value = logData.totalHours; // "Total Hours" data
+		  worksheet.getCell(rowIndex, 1).value = `For this month of ${new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}`; // Month Header
+		  worksheet.getCell(rowIndex, 1).font = { bold: true }; // Bold the month header
+		  rowIndex++;
   
-			// Center align the attendance data
-			timeInCell.alignment = { horizontal: 'center' };
-			timeOutCell.alignment = { horizontal: 'center' };
-			totalHoursCell.alignment = { horizontal: 'center' };
+		  // Set date headers and attendance data for each employee
+		  worksheet.getCell(rowIndex, 1).value = 'Date';
+		  worksheet.getCell(rowIndex, 2).value = 'Time In';
+		  worksheet.getCell(rowIndex, 3).value = 'Time Out';
+		  worksheet.getCell(rowIndex, 4).value = 'Holiday';
+		  rowIndex++;
+  
+		  dateHeaders.forEach(date => {
+			const logData = attendance[date] || { timeIn: '-', timeOut: '-', totalHours: '-', holidayName: '' };
+			worksheet.getCell(rowIndex, 1).value = date; // Date in first column
+			worksheet.getCell(rowIndex, 2).value = logData.timeIn; // "Time In"
+			worksheet.getCell(rowIndex, 3).value = logData.timeOut; // "Time Out"
+			worksheet.getCell(rowIndex, 4).value = logData.holidayName || '-'; // Holiday name if available
+			rowIndex++;
 		  });
   
-		  rowIndex++; // Move to the next row for the next employee
+		  // Add "Certify" text at the end of each employee's attendance record
+		  worksheet.getCell(rowIndex, 1).value = 'Certify:';
+		  worksheet.getCell(rowIndex, 1).font = { bold: true, italic: true };
+		  rowIndex++;
+  
+		  worksheet.getCell(rowIndex, 1).value = 'I hereby certify that the attendance details above are correct and complete.';
+		  worksheet.getCell(rowIndex, 1).alignment = { horizontal: 'center' };
+		  rowIndex++;
+  
+		  worksheet.getCell(rowIndex, 1).value = '_____________________';
+		  worksheet.getCell(rowIndex, 1).alignment = { horizontal: 'center' };
+		  rowIndex++;
+  
+		  worksheet.getCell(rowIndex, 1).value = 'Authorized Signatory';
+		  worksheet.getCell(rowIndex, 1).alignment = { horizontal: 'center' };
+		  rowIndex++;
+  
+		  rowIndex++; // Add space between employees
 		});
   
 		// Set the width of the "Employee Name" column based on the longest name
@@ -1113,7 +1111,7 @@ const getExportExcel = async (req, res) => {
 		// Set fixed width for all other columns
 		worksheet.columns.forEach((column, index) => {
 		  if (index > 0) { // Skip the first column ("Employee Name")
-			column.width = 12; // Fixed width for all other columns
+			column.width = 15; // Fixed width for all other columns
 		  }
 		});
   
@@ -1129,19 +1127,15 @@ const getExportExcel = async (req, res) => {
 		  });
 		});
   
-		// Make the first column (Employee Name) sticky
-		worksheet.views = [{ state: 'frozen', xSplit: 1, }]; // Freeze the first column and first two rows
-  
 		// Set up the response headers
 		res.setHeader(
 		  'Content-Type',
 		  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 		);
 		res.setHeader(
-			'Content-Disposition',
-			`attachment; filename="Attendance_Report_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx"`
-		  );
-		  
+		  'Content-Disposition',
+		  `attachment; filename="Attendance_Report_${year}-${month}.xlsx"`
+		);
   
 		// Write the workbook to the response
 		workbook.xlsx.write(res)
@@ -1155,6 +1149,8 @@ const getExportExcel = async (req, res) => {
 	  }
 	);
   };
+  
+  
   
 
 
