@@ -250,99 +250,109 @@
                 }
             }
 
-
             function updateCalendarWithAttendance(data) {
-                if (window.calendar) {
-                    // Clear existing events
-                    window.calendar.removeAllEvents();
+    if (window.calendar) {
+        // Clear existing events
+        window.calendar.removeAllEvents();
 
-                    // Iterate through the attendance data and create events
-                    data.forEach(entry => {
-                        const logDate = entry.log_date;
+        // Iterate through the attendance data and create events
+        data.forEach(entry => {
+            const logDate = entry.log_date;
+            const datePart = moment(logDate).format('YYYY-MM-DD');
 
-                        const datePart = moment(logDate).format('YYYY-MM-DD');
-                        // Correctly parse the log date and time_in/time_out into a full datetime string
-                        const timeInDateTime = entry.time_in ? moment(`${datePart} ${entry.time_in}`, 'YYYY-MM-DD hh:mm:ss A') : null;
-                        const timeOutDateTime = entry.time_out ? moment(`${datePart} ${entry.time_out}`, 'YYYY-MM-DD hh:mm:ss A') : null;
-                   
-                        if (entry.holidayId !== null) {
-               
-                            const holidayEvent = {
-                                title: entry.description,
-                                start: datePart,
-                         
-                                allDay: true
-                            };
-                            window.calendar.addEvent(holidayEvent);
-                        }
-                        // Creating time_in event if time_in data is available
-                        if (entry.time_in !== null) {
-                            const timeInEvent = {
-                                title: `${entry.status_timein}`,
-                                start: timeInDateTime.utc().format(),
-                                color: entry.status_timein === 'late' ? '#e04f1a' : '#82b54b', // red for late, green for ontime or early
-                                allDay: false
-                            };
-                            window.calendar.addEvent(timeInEvent);
-                        } else {
-                            // Creating an absent event if time_in data is not available
-                            const absentEvent = {
-                                title: 'ABSENT',
-                                start: datePart, // Use logDate to indicate the absence
-                                color: '#FF0000', // Yellow or another color to indicate absence
-                                allDay: true
-                            };
-                            window.calendar.addEvent(absentEvent);
-                        }
+            // Parse time_in, time_out, break_in, and break_out
+            const timeInDateTime = entry.time_in ? moment(`${datePart} ${entry.time_in}`, 'YYYY-MM-DD hh:mm:ss A') : null;
+            const timeOutDateTime = entry.time_out ? moment(`${datePart} ${entry.time_out}`, 'YYYY-MM-DD hh:mm:ss A') : null;
+            const breakInDateTime = entry.break_in ? moment(`${datePart} ${entry.break_in}`, 'YYYY-MM-DD hh:mm:ss A') : null;
+            const breakOutDateTime = entry.break_out ? moment(`${datePart} ${entry.break_out}`, 'YYYY-MM-DD hh:mm:ss A') : null;
 
-                        // Creating time_out event if time_out data is available
-                        if (entry.time_out) {
-                            const timeOutEvent = {
-                                title: `${entry.status_timeout}`,
-                                start: timeOutDateTime.utc().format(),
-                                color: entry.status_timeout === 'ontime' ? '#82b54b' : '#e04f1a', // green for ontime, red for late
-                                allDay: false
-                            };
-                            window.calendar.addEvent(timeOutEvent);
+            // Add holiday event if applicable
+            if (entry.holidayId !== null) {
+                const holidayEvent = {
+                    title: entry.description,
+                    start: datePart,
+                    allDay: true
+                };
+                window.calendar.addEvent(holidayEvent);
+            }
 
+            // Add time_in event
+            if (entry.time_in) {
+                const timeInEvent = {
+                    title: `${entry.status_timein}`,
+                    start: timeInDateTime.utc().format(),
+                    color: entry.status_timein === 'late' ? '#e04f1a' : '#82b54b', // red for late, green for ontime/early
+                    allDay: false
+                };
+                window.calendar.addEvent(timeInEvent);
+            } else {
+                // Add absent event
+                const absentEvent = {
+                    title: 'ABSENT',
+                    start: datePart,
+                    color: '#FF0000', // Red for absence
+                    allDay: true
+                };
+                window.calendar.addEvent(absentEvent);
+            }
 
-                        }if (entry.time_in && entry.time_out) {
-    // Specify the time format (adjust if needed)
-    const timeFormat = "h:mm:ss A"; // 12-hour format with AM/PM
+            // Add time_out event
+            if (entry.time_out) {
+                const timeOutEvent = {
+                    title: `${entry.status_timeout}`,
+                    start: timeOutDateTime.utc().format(),
+                    color: entry.status_timeout === 'ontime' ? '#82b54b' : '#e04f1a', // green for ontime, red for late
+                    allDay: false
+                };
+                window.calendar.addEvent(timeOutEvent);
+            }
 
-    // Parse time_in and time_out explicitly
-    const timeIn = moment(entry.time_in, timeFormat);
-    const timeOut = moment(entry.time_out, timeFormat);
+            // Add break_in event
+            if (entry.break_in) {
+                const breakInEvent = {
+                    title: 'Break In',
+                    start: breakInDateTime.utc().format(),
+                    color: '#FFA500', // Orange for break
+                    allDay: false
+                };
+                window.calendar.addEvent(breakInEvent);
+            }
 
-    // Ensure valid moment objects
-    if (!timeIn.isValid() || !timeOut.isValid()) {
-        console.error("Invalid time format for time_in or time_out:", entry.time_in, entry.time_out);
-        return;
-    }
+            // Add break_out event
+            if (entry.break_out) {
+                const breakOutEvent = {
+                    title: 'Break Out',
+                    start: breakOutDateTime.utc().format(),
+                    color: '#FFA500', // Orange for break
+                    allDay: false
+                };
+                window.calendar.addEvent(breakOutEvent);
+            }
 
-    // Calculate the total duration in hours (floating-point)
-    const duration = timeOut.diff(timeIn, 'hours', true); // Accurate floating-point duration
+            // Calculate total hours and check undertime
+            if (entry.time_in && entry.time_out) {
+                
 
-    // Check if duration is less than 8 hours
-    if (duration < 8) {
-        // Create an event for work duration below 8 hours
-        const shortHoursEvent = {
-            title: 'Undertime',
-            start: datePart , // Use timeIn as the event's start time
-            color: '#FF0000', // Orange color to highlight the event
-            allDay: true
-        };
-        // Add the event to the calendar
-        window.calendar.addEvent(shortHoursEvent);
-    }
-}
+                // Calculate total working hours
+                const totalDuration = entry.total_hours;
 
-                    });
-
-                    // Re-render the calendar to ensure updates are shown
-                    window.calendar.render();
+                // Check if duration is less than 8 hours
+                if (parseFloat(totalDuration)  < 8.00) {
+                    const shortHoursEvent = {
+                        title: 'UNDERTIME',
+                        start: datePart,
+                        color: '#FF0000', // Red for undertime
+                        allDay: true
+                    };
+                    window.calendar.addEvent(shortHoursEvent);
                 }
             }
+        });
+
+        // Re-render the calendar to show updates
+        window.calendar.render();
+    }
+}
 
             // Convert 12-hour time format (with AM/PM) to 24-hour format
             function convertTo24HourFormat(time) {

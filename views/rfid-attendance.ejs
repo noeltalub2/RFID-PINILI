@@ -321,26 +321,33 @@
                                         <h5>HOLIDAY: <%=holidays[0].description%></h5>
                                     <%}%>
                                     <div class="radio-tile-group">
-
                                         <div class="input-container">
-                                            <input id="time_in_am" class="radio-button" type="radio" name="attendance"
-                                                value="timein" />
+                                            <input id="time_in_am" class="radio-button" type="radio" name="attendance" value="timein" />
                                             <div class="radio-tile">
-
-                                                <label for="time_in" class="radio-tile-label">Time In</label>
+                                                <label for="time_in_am" class="radio-tile-label">Time In</label>
                                             </div>
                                         </div>
-
+                                    
                                         <div class="input-container">
-                                            <input id="time_out_am" class="radio-button" type="radio" name="attendance"
-                                                value="timeout" />
+                                            <input id="time_out_am" class="radio-button" type="radio" name="attendance" value="timeout" />
                                             <div class="radio-tile">
-
-                                                <label for="time_out" class="radio-tile-label">Time Out</label>
+                                                <label for="time_out_am" class="radio-tile-label">Time Out</label>
                                             </div>
                                         </div>
-
-
+                                    
+                                        <div class="input-container">
+                                            <input id="break_in" class="radio-button" type="radio" name="attendance" value="breakin" />
+                                            <div class="radio-tile">
+                                                <label for="break_in" class="radio-tile-label">Break In</label>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="input-container">
+                                            <input id="break_out" class="radio-button" type="radio" name="attendance" value="breakout" />
+                                            <div class="radio-tile">
+                                                <label for="break_out" class="radio-tile-label">Break Out</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="instruction-container" class="mb-3 p-3">

@@ -3,10 +3,10 @@ import db from "../database/connect_db.js";
 import bcrypt, { compareSync } from "bcrypt";
 import { nanoid } from "nanoid";
 import createToken from "../utils/token.js";
-import path from 'path';
-import ExcelJS from 'exceljs';
+import path from "path";
+import ExcelJS from "exceljs";
 import moment from "moment";
-import PDFDocument from 'pdfkit';
+import PDFDocument from "pdfkit";
 const getSignIn = (req, res) => {
 	res.render("Admin/signin", { username: req.flash("username")[0] });
 };
@@ -198,7 +198,7 @@ const getDashboard = async (req, res) => {
 	)[0].attendance_percentage;
 
 	const recentAttendance = await query(
-		"SELECT u.profile_url, u.firstname, u.lastname, e.department, e.designation, a.time_in, a.time_out, a.total_hours, a.status_timein, a.status_timeout, a.log_date FROM users u LEFT JOIN employment e ON u.uuid = e.user_uuid LEFT JOIN attendance a ON u.uuid = a.user_uuid ORDER BY a.modified_at DESC LIMIT 5"
+		"SELECT u.profile_url, u.firstname, u.lastname, e.department, e.designation, a.time_in, a.time_out, a.break_in, a.break_out, a.total_hours, a.status_timein, a.status_timeout, a.log_date FROM users u LEFT JOIN employment e ON u.uuid = e.user_uuid LEFT JOIN attendance a ON u.uuid = a.user_uuid ORDER BY a.modified_at DESC LIMIT 5"
 	);
 
 	const activeRfid = (
@@ -995,144 +995,204 @@ const getAttendanceReport = async (req, res) => {
 		title: "Attendance Report",
 		page: "report-attendance",
 		pagetitle: "All Attendance Report",
-		recentAttendance, currentMonth, currentYear
+		recentAttendance,
+		currentMonth,
+		currentYear,
 	});
 };
 
 const getExportExcel = async (req, res) => {
-  const { month, year } = req.query;
+	const { month, year } = req.query;
 
-  if (!month || !year) {
-    res.status(400).send('Month and Year are required');
-    return;
-  }
+	if (!month || !year) {
+		res.status(400).send("Month and Year are required");
+		return;
+	}
 
-  // Generate start and end dates
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+	// Generate start and end dates
+	const startDate = new Date(year, month - 1, 1);
+	const endDate = new Date(year, month, 0);
 
-  // Generate date headers
-  const dateHeaders = [];
-  let currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
-    dateHeaders.push(currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
+	// Generate date headers
+	const dateHeaders = [];
+	let currentDate = new Date(startDate);
+	while (currentDate <= endDate) {
+		dateHeaders.push(
+			currentDate.toLocaleDateString("en-US", {
+				month: "short",
+				day: "numeric",
+			})
+		);
+		currentDate.setDate(currentDate.getDate() + 1);
+	}
 
-  db.query(
-    `SELECT u.firstname, u.lastname, a.log_date, a.total_hours, a.time_in, a.time_out, h.description AS holiday_name
+	db.query(
+		`SELECT u.firstname, u.lastname, a.log_date, a.total_hours, a.time_in, a.break_in, a.break_out, a.time_out, h.description AS holiday_name
      FROM users u
      LEFT JOIN attendance a ON u.uuid = a.user_uuid
      LEFT JOIN holidays h ON a.log_date = h.holiday_date
      WHERE a.log_date BETWEEN ? AND ?`,
-    [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        res.status(500).send('Database query error');
-        return;
-      }
+		[
+			startDate.toISOString().split("T")[0],
+			endDate.toISOString().split("T")[0],
+		],
+		(err, results) => {
+			if (err) {
+				console.error(err);
+				res.status(500).send("Database query error");
+				return;
+			}
 
-      const employeeMap = new Map();
-      results.forEach(row => {
-        const employeeName = `${row.firstname} ${row.lastname}`;
-        const logDate = new Date(row.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const timeIn = row.time_in || '-';
-        const timeOut = row.time_out || '-';
-        const holidayName = row.holiday_name || '';
+			const employeeMap = new Map();
+			results.forEach((row) => {
+				const employeeName = `${row.firstname} ${row.lastname}`;
+				const logDate = new Date(row.log_date).toLocaleDateString(
+					"en-US",
+					{ month: "short", day: "numeric" }
+				);
+				const timeIn = row.time_in || "-";
+				const breakIn = row.break_in || "-";
+				const breakOut = row.break_out || "-";
+				const timeOut = row.time_out || "-";
+				const holidayName = row.holiday_name || "";
 
-        if (!employeeMap.has(employeeName)) {
-          employeeMap.set(employeeName, {});
-        }
+				if (!employeeMap.has(employeeName)) {
+					employeeMap.set(employeeName, {});
+				}
 
-        // Calculate hours worked if time_in and time_out are available
-        let calculatedHours = '-';
-        if (timeIn !== '-' && timeOut !== '-') {
-			calculatedHours = parseFloat(row.total_hours) > 8.00 ? row.total_hours : `${row.total_hours} (Undertime)` //0.00
-        }
+				// Calculate hours worked if time_in and time_out are available
+				let calculatedHours = "-";
+				if (timeIn !== "-" && timeOut !== "-") {
+					calculatedHours =
+						parseFloat(row.total_hours) > 8.0
+							? row.total_hours
+							: `${row.total_hours} (Undertime)`; //0.00
+				}
 
-        employeeMap.get(employeeName)[logDate] = { timeIn, timeOut, calculatedHours, holidayName };
-      });
+				employeeMap.get(employeeName)[logDate] = {
+					timeIn,
+					timeOut,
+					breakIn,
+					breakOut,
+					calculatedHours,
+					holidayName,
+				};
+			});
 
-      const doc = new PDFDocument({ margin: 30 });
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="Attendance_Report_${year}-${month}.pdf"`);
-      doc.pipe(res);
+			const doc = new PDFDocument({ margin: 30 });
+			res.setHeader("Content-Type", "application/pdf");
+			res.setHeader(
+				"Content-Disposition",
+				`attachment; filename="Attendance_Report_${year}-${month}.pdf"`
+			);
+			doc.pipe(res);
 
-      employeeMap.forEach((attendance, employeeName) => {
-        doc.fontSize(14).font('Helvetica-Bold').text(`Employee: ${employeeName}`, { underline: true });
-        doc.fontSize(12).text(`Month: ${new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}`);
-        doc.moveDown();
+			employeeMap.forEach((attendance, employeeName) => {
+				doc.fontSize(14)
+					.font("Helvetica-Bold")
+					.text(`Employee: ${employeeName}`, { underline: true });
+				doc.fontSize(12).text(
+					`Month: ${new Date(year, month - 1).toLocaleString(
+						"default",
+						{ month: "long", year: "numeric" }
+					)}`
+				);
+				doc.moveDown();
 
-        // Table Headers
-        const tableTop = doc.y; // Track the starting Y position of the table
-        const columnWidths = [100, 100, 100, 100, 150];
-        const rowHeight = 16;
+				// Table Headers
+				const tableTop = doc.y; // Track the starting Y position of the table
+				const columnWidths = [60, 75, 75, 75, 75, 75, 115];
+				const rowHeight = 16;
 
-        // Draw Header Row
-        doc.fontSize(9).font('Helvetica-Bold');
-        drawRow(doc, tableTop, columnWidths, rowHeight, ['Date', 'Time In', 'Time Out', 'Calculated Hours', 'Holiday']);
+				// Draw Header Row
+				doc.fontSize(9).font("Helvetica-Bold");
+				drawRow(doc, tableTop, columnWidths, rowHeight, [
+					"Date",
+					"Time In",
+					"Break In",
+					"Break Out",
+					"Time Out",
+					"Total Hours",
+					"Holiday",
+				]);
 
-        // Draw Attendance Rows
-        doc.font('Helvetica');
-        let currentY = tableTop + rowHeight;
-        dateHeaders.forEach(date => {
-          const logData = attendance[date] || { timeIn: '-', timeOut: '-', calculatedHours: '-', holidayName: '' };
-          drawRow(doc, currentY, columnWidths, rowHeight, [
-            date,
-            logData.timeIn,
-            logData.timeOut,
-            logData.calculatedHours,
-            logData.holidayName,
-          ]);
-          currentY += rowHeight;
+				// Draw Attendance Rows
+				doc.font("Helvetica");
+				let currentY = tableTop + rowHeight;
+				dateHeaders.forEach((date) => {
+					const logData = attendance[date] || {
+						timeIn: "-",
+						breakIn: "-",
+						breakOut: "-",
+						timeOut: "-",
+						calculatedHours: "-",
+						holidayName: "",
+					};
+					drawRow(doc, currentY, columnWidths, rowHeight, [
+						date,
+						logData.timeIn,
+						logData.breakIn,
+						logData.breakOut,
+						logData.timeOut,
+						
+						logData.calculatedHours,
+						logData.holidayName,
+					]);
+					currentY += rowHeight;
 
-          // Add new page if the rows exceed the page height
-          if (currentY > doc.page.height - 50) {
-            doc.addPage();
-            currentY = 50; // Reset the Y position
-            drawRow(doc, currentY, columnWidths, rowHeight, ['Date', 'Time In', 'Time Out', 'Calculated Hours', 'Holiday']);
-            currentY += rowHeight;
-          }
-        });
+					// Add new page if the rows exceed the page height
+					if (currentY > doc.page.height - 50) {
+						doc.addPage();
+						currentY = 50; // Reset the Y position
+						drawRow(doc, currentY, columnWidths, rowHeight, [
+							"Date",
+							"Time In",
+							"Break In",
+							"Break Out",
+							"Time Out",
+							"Total Hours",
+							"Holiday",
+						]);
+						currentY += rowHeight;
+					}
+				});
 
-        doc.moveDown(2);
+				doc.moveDown(2);
 
-        // Certify Section
-        doc.font('Helvetica-Bold').text('Certify:', { align: 'left' });
-        doc.font('Helvetica').text('I hereby certify that the attendance details above are correct and complete.', { align: 'center' });
-        doc.text('_____________________', { align: 'center' });
-        doc.text('Authorized Signatory', { align: 'center' });
-        doc.addPage(); // Add new page for the next employee
-      });
+				// Certify Section
+				doc.font("Helvetica-Bold").text("Certify:", { align: "left" });
+				doc.font("Helvetica").text(
+					"I hereby certify that the attendance details above are correct and complete.",
+					{ align: "center" }
+				);
+				doc.text("_____________________", { align: "center" });
+				doc.text("Authorized Signatory", { align: "center" });
+				doc.addPage(); // Add new page for the next employee
+			});
 
-      doc.end();
-    }
-  );
+			doc.end();
+		}
+	);
 
-  // Helper function to draw a row in the table
-  function drawRow(doc, y, columnWidths, height, rowValues) {
-    let x = doc.page.margins.left; // Starting X position for the first column
+	// Helper function to draw a row in the table
+	function drawRow(doc, y, columnWidths, height, rowValues) {
+		let x = doc.page.margins.left; // Starting X position for the first column
 
-    rowValues.forEach((text, i) => {
-      // Draw cell borders
-      doc.rect(x, y, columnWidths[i], height).stroke();
+		rowValues.forEach((text, i) => {
+			// Draw cell borders
+			doc.rect(x, y, columnWidths[i], height).stroke();
 
-      // Add text inside the cell
-      doc.text(text, x + 5, y + 5, { width: columnWidths[i] - 10, align: 'left' });
+			// Add text inside the cell
+			doc.text(text, x + 5, y + 5, {
+				width: columnWidths[i] - 10,
+				align: "left",
+			});
 
-      // Update X for the next column
-      x += columnWidths[i];
-    });
-  }
+			// Update X for the next column
+			x += columnWidths[i];
+		});
+	}
 };
-
-
-  
-  
-  
-
-
 
 const getDepartment = async (req, res) => {
 	const departments = await query(
